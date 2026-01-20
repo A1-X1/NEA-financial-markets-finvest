@@ -1,11 +1,39 @@
 from dataclasses import dataclass
+from modules.colourScheme import ColourScheme
 
 @dataclass
 class GlobalSettings:
     def __init__(self):
+        # Default Forest Green palette from Section 2 of the Spec
+        self.__theme = ColourScheme(
+            bg='#FFFFFF',
+            surface='#F8F8FA',
+            accent='#24986D',
+            btn_bg='#E2F0ED',
+            btn_fg='#24986D',
+            text_p='#0E7850',
+            text_s='#000000',
+            text_ph='#C4C4C4',
+            pos='#10B981',
+            neg='#EF4444',
+            sb_act_bg='#E2F0ED',
+            sb_act_fg='#24986D',
+            sb_inact_bg='#F8F8FA',
+            sb_inact_fg='#7C8D88'
+        )
         self.__currency = "USD"
-        self.__risk_threshold = 0.05
-        self.__ui_theme = "Dark Forest"
+
+    @property
+    def theme(self) -> ColourScheme:
+        return self.__theme
+
+    @theme.setter
+    def theme(self, value: ColourScheme):
+        if isinstance(value, ColourScheme):
+            self.__theme = value
+        else:
+            # Type checking ensures the UI doesn't break at runtime
+            raise TypeError("Theme must be an instance of ColourScheme")
 
     @property
     def currency(self) -> str:
@@ -13,19 +41,4 @@ class GlobalSettings:
 
     @currency.setter
     def currency(self, value: str):
-        valid_currencies = ["USD", "GBP", "EUR", "JPY"]
-        if value in valid_currencies:
-            self.__currency = value
-        else:
-            raise ValueError(f"Unsupported currency: {value}")
-
-    @property
-    def risk_threshold(self) -> float:
-        return self.__risk_threshold
-
-    @risk_threshold.setter
-    def risk_threshold(self, value: float):
-        if 0 < value <= 1:
-            self.__risk_threshold = value
-        else:
-            raise ValueError("Risk threshold must be between 0 and 1")
+        self.__currency = value

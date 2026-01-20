@@ -2,6 +2,7 @@ from nicegui import ui
 from modules.settings import GlobalSettings
 from ui.pages.dashboard import DashboardLayout
 
+
 settings = GlobalSettings()
 layout = DashboardLayout(settings)
 
