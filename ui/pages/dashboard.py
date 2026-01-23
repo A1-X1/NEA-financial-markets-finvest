@@ -15,9 +15,11 @@ class DashboardLayout:
         ui.query('body').style(f'background-color: {colours.background}')
         
         # 2. Setup the Sidebar (Persistent)
-        with ui.left_drawer().style(f'background-color: {colours.surface}'):
+        with ui.left_drawer().style(f'background-color: {colours.surface}; flex-wrap: wrap; align-content: center;'):
             ui.label('FINVEST').style(f'color: {colours.text_primary}; font-weight: bold')
 
+            SideButton(buttonLabel='Home')
+            SideButton(buttonLabel='Home')
             SideButton(buttonLabel='Home')
 
         # 3. Setup the Main Content Area (The "Slot")
