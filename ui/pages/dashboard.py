@@ -18,8 +18,7 @@ class DashboardLayout:
 
     def load_home_page(self, nav_button : SideButton = None):
 
-        # If no button is passed (e.g., on initial load), 
-        # we default to the first button in our tracked list.
+        # If no button is passed, default to first 
         target_button = nav_button if nav_button else self.__nav_buttons[0]
 
         self.__update_active_button(target_button)
@@ -29,13 +28,13 @@ class DashboardLayout:
             home.render()
 
     def build_ui(self):
-        # Access the encapsulated colour object
+        # Access the colour object
         colours = self.__settings.theme
         
-        # 1. Setup the Theme/Background using the managed palette
+        # Setup the Theme using the palette
         ui.query('body').style(f'background-color: {colours.background}')
         
-        # 2. Setup the Sidebar (Persistent)
+        # Setup the Sidebar 
         with ui.left_drawer().style(f'background-color: {colours.surface}; flex-wrap: wrap; align-content: center; padding: 0;').classes(f'gap-0'):
             ui.label('FINVEST').style(f'color: {colours.text_primary}; font-size: 24px; font-weight: bold; margin-bottom: 20px;').classes(f'p-5 flex items-center justify-center w-full')
 
@@ -45,11 +44,11 @@ class DashboardLayout:
 
             self.__nav_buttons.extend([homeBtn, riskBtn, portfolioBtn])
 
-        # 3. Setup the Main Content Area (The "Slot")
+        # Setup the Main Content Area
         self.__content_area = ui.column().classes('w-full p-4')
 
-        # 4. SET DEFAULT VIEW
-        # We explicitly call load_home_page with homeBtn to trigger the 
+        # SET DEFAULT VIEW
+        # explicitly call load_home_page with homeBtn to trigger the 
         # __update_active_button logic immediately on load.
         if self.__nav_buttons:
             self.load_home_page(self.__nav_buttons[0])
