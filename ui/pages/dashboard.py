@@ -30,6 +30,9 @@ class DashboardLayout:
     def build_ui(self):
         # Access the colour object
         colours = self.__settings.theme
+
+        # Clears the list each refresh to stop lack of sync
+        self.__nav_buttons.clear()
         
         # Setup the Theme using the palette
         ui.query('body').style(f'background-color: {colours.background}')
