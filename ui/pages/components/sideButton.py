@@ -1,5 +1,5 @@
 from nicegui import ui
-from modules.settings import GlobalSettings
+from modules.globalSettings import GlobalSettings
 from modules.colourScheme import Theme
 from typing import Callable
 
@@ -33,13 +33,13 @@ class SideButton(ui.button):
 
     # the colour isnt getting applied
     def applyStyles(self):
-        self.classes('w-full rounded-none no-shadow cursor-pointer')
+        self.classes('w-full rounded-8 no-shadow cursor-pointer')
         self.props(f':ripple="false" flat unelevated ')
 
         foreground_colour = Theme.sb_active_fg if (self.__isActive == True) else Theme.sb_inactive_fg
         background_colour = Theme.sb_active_bg if (self.__isActive == True) else Theme.sb_inactive_bg
 
-        self.style(f'width: 100%; color: {foreground_colour} ; background: {background_colour};')
+        self.style(f'width: 85%; color: {foreground_colour} ; background: {background_colour};')
 
     
     def toggle(self) -> None: 

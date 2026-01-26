@@ -1,5 +1,5 @@
 from nicegui import ui
-from modules.settings import GlobalSettings
+from modules.globalSettings import GlobalSettings
 
 class HomePage:
     def __init__(self, settings: GlobalSettings):

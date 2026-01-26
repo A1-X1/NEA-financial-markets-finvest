@@ -76,6 +76,62 @@ class ColourScheme:
     def sb_inactive_fg(self) -> str:
         return self.__sb_inactive_fg
     
+    @background.setter
+    def background(self, value: str):
+        self.__background = value
+
+    @surface.setter
+    def surface(self, value: str):
+        self.__surface = value
+
+    @accent.setter
+    def accent(self, value: str):
+        self.__accent = value
+
+    @button_background.setter
+    def button_background(self, value: str):
+        self.__button_background = value
+
+    @button_foreground.setter
+    def button_foreground(self, value: str):
+        self.__button_foreground = value
+
+    @text_primary.setter
+    def text_primary(self, value: str):
+        self.__text_primary = value
+
+    @text_secondary.setter
+    def text_secondary(self, value: str):
+        self.__text_secondary = value
+
+    @text_placeholder.setter
+    def text_placeholder(self, value: str):
+        self.__text_placeholder = value
+
+    @positive.setter
+    def positive(self, value: str):
+        self.__positive = value
+
+    @negative.setter
+    def negative(self, value: str):
+        self.__negative = value
+
+    @sb_active_bg.setter
+    def sb_active_bg(self, value: str):
+        self.__sb_active_bg = value
+
+    @sb_active_fg.setter
+    def sb_active_fg(self, value: str):
+        self.__sb_active_fg = value
+
+    @sb_inactive_bg.setter
+    def sb_inactive_bg(self, value: str):
+        self.__sb_inactive_bg = value
+
+    @sb_inactive_fg.setter
+    def sb_inactive_fg(self, value: str):
+        self.__sb_inactive_fg = value
+    
 
 Theme = ColourScheme(
             bg='#FFFFFF',
