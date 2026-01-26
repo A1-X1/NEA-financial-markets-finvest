@@ -27,9 +27,9 @@ class DashboardLayout:
         with ui.left_drawer().style(f'background-color: {colours.surface}; flex-wrap: wrap; align-content: center;'):
             ui.label('FINVEST').style(f'color: {colours.text_primary}; font-weight: bold')
 
-            SideButton(buttonLabel='Home', callbackFunction=self.load_home_page)
-            SideButton(buttonLabel='Home', callbackFunction=self.load_home_page)
-            SideButton(buttonLabel='Home', callbackFunction=self.load_home_page)
+            SideButton(buttonLabel='Home', callbackFunction=self.load_home_page())
+            SideButton(buttonLabel='Home', callbackFunction=self.load_home_page())
+            SideButton(buttonLabel='Home', callbackFunction=self.load_home_page())
 
         # 3. Setup the Main Content Area (The "Slot")
         self.__content_area = ui.column().classes('w-full p-4')
