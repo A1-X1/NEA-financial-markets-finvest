@@ -28,7 +28,7 @@ def settings():
         page.render()
 
 @ui.page('/charts')
-def settings():
+def charts():
     layout_renderer.render(active_route='charts')
     
     with ui.column().classes('w-full p-4'):
@@ -36,7 +36,7 @@ def settings():
         page.render()
 
 @ui.page('/portfolio')
-def settings():
+def portfolio():
     layout_renderer.render(active_route='portfolio')
     
     with ui.column().classes('w-full p-4'):
@@ -44,7 +44,7 @@ def settings():
         page.render()
 
 @ui.page('/simulation')
-def settings():
+def simulation():
     layout_renderer.render(active_route='simulation')
     
     with ui.column().classes('w-full p-4'):
@@ -52,7 +52,7 @@ def settings():
         page.render()
 
 @ui.page('/news')
-def settings():
+def news():
     layout_renderer.render(active_route='news')
     
     with ui.column().classes('w-full p-4'):

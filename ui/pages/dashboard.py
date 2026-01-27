@@ -2,6 +2,9 @@ from nicegui import ui
 from modules.globalSettings import globalSettings
 from ui.pages.components.sideButton import SideButton
 
+
+
+
 class DashboardLayout:
     def __init__(self):
         self.__settings = globalSettings

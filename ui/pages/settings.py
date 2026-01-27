@@ -61,10 +61,9 @@ class SettingsPage:
         # UI CALLBACK: Force Refresh
         ui.run_javascript('window.location.reload()')
 
-    def updateCurrency(self):
+    def updateCurrency(self, newCurrency : str):
         settings = globalSettings
-        newCurrency = self.__currencyInput.current_value
-
+        
         if (newCurrency == None):
             return
         else:
@@ -82,6 +81,6 @@ class SettingsPage:
 
         SettingsTile("Dark mode", "dark_mode", "#5d47ff", "white", self.__settings.darkMode, lambda: self.toggleDarkMode())
         SettingsTile("Accessibility mode", "visibility", "#cf9800", "white", self.__settings.accessibilityMode, lambda: self.toggleAccessibilityMode())
-        self.__currencyInput = SettingsInput("Currency", "monetization_on", "#08a112", "white", self.__settings.currency, lambda: self.updateCurrency())
+        self.__currencyInput = SettingsInput("Currency", "monetization_on", "#08a112", "white", self.__settings.currency, lambda newCurrency : self.updateCurrency(newCurrency))
         
         

@@ -1,26 +1,36 @@
 from nicegui import ui
 from modules.globalSettings import globalSettings
-from modules.colourScheme import ColourScheme
-from dataclasses import dataclass
 
 
-@dataclass
 class HomeWidget(ui.element):
-    def __init__(self):
-        # 2. Initialize the parent element with the HTML tag you want (e.g., 'div')
+    def __init__(self, title: str):
         super().__init__('div') 
+        
+        # Get current theme settings
+        theme = globalSettings.theme
 
-        settings = globalSettings
-        colourScheme: ColourScheme = settings.theme
+        # Style the main container (The Widget Card)
+        self.classes('w-full h-[300px] flex flex-col p-4 gap-4 rounded-xl shadow-sm border border-gray-100/10')
+        
+        # Apply Theme Colors using Tailwind arbitrary values
+        self.classes(f'bg-[{theme.surface}] text-[{theme.text_primary}]')
 
-        # 3. Use 'with self' to place content INSIDE this widget
         with self:
-            # You can apply styles to the container here
-            self.__container = ui.element('div').classes(f'bg-blue-100').style(f' width: 100%; height: 20%;')
+            # header
+            with ui.row().classes('w-full items-center justify-between'):
+                # Title with primary text color
+                ui.label(title).classes('text-lg font-bold tracking-wide')
+                
+                # ui.icon('more_horiz').classes(f'text-[{theme.text_secondary}] cursor-pointer')
+
+            # flex-grow: Takes up all remaining vertical space
+            self.__content_container = ui.element('div').classes('w-full flex-grow relative')
             
-            with self.__container:
-                ui.label("Risk Metric").style(f'color: {settings.theme.text_primary}')
+            # Optional: Add a subtle placeholder text or loading state if empty
+            with self.__content_container:
+                pass 
 
     @property
-    def container(self):
-        return self.__container
+    def content(self):
+        """Returns the inner container to add content to."""
+        return self.__content_container
