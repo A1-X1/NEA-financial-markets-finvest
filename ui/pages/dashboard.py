@@ -46,6 +46,15 @@ class DashboardLayout:
         
         # Setup the Theme using the palette
         ui.query('body').style(f'background-color: {colours.background}')
+
+        homeBtn : SideButton = None
+        chartsBtn : SideButton = None
+        simulationBtn : SideButton = None
+        portfolioBtn : SideButton = None
+        newsBtn : SideButton = None
+
+        settingsBtn : SideButton = None
+
         
         # Setup the Sidebar 
         with ui.left_drawer().style(f'background-color: {colours.surface}; flex-wrap: wrap; align-content: center; padding: 0; padding-bottom: 20px;').classes(f'flex flex-col items-center gap-0'):
@@ -66,6 +75,14 @@ class DashboardLayout:
 
         # Setup the Main Content Area
         self.__content_area = ui.column().classes('w-full p-4')
+
+        last_page = self.__settings.currentPage # e.g., "Settings"
+
+        if last_page == "settings":
+            self.load_settings_page(settingsBtn)
+        else:
+            self.load_home_page(homeBtn)
+
 
         # SET DEFAULT VIEW
         # explicitly call load_home_page with homeBtn to trigger the 
