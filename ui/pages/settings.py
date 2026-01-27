@@ -12,18 +12,9 @@ class SettingsPage:
     def placeholder():
         pass
 
-    def updateSettingsAndStore(self):
-        settings = globalSettings
-        settings.currentPage = "settings"
+    def storeNewSettings(self, newSettings : GlobalSettings):
 
-        if (settings.darkMode == True):
-            settings.theme = Theme
-            settings.darkMode = False
-        else:
-            settings.theme = DarkTheme
-            settings.darkMode = True
-
-        binaryData = pickle.dumps(settings)
+        binaryData = pickle.dumps(newSettings)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS GlobalSettingsTable (
                 id INTEGER PRIMARY KEY CHECK (id = 1), 
@@ -38,10 +29,34 @@ class SettingsPage:
 
         connection.commit()
 
-        print("Updated Settings Table")
+    def toggleDarkMode(self):
+        settings = globalSettings
 
-        # 3. UI CALLBACK: Force Refresh
-        ui.notify("Theme Updated!")
+        if (settings.darkMode == True):
+            settings.theme = Theme
+            settings.darkMode = False
+        else:
+            settings.theme = DarkTheme
+            settings.darkMode = True
+
+        self.storeNewSettings(settings)
+
+        # UI CALLBACK: Force Refresh
+        ui.run_javascript('window.location.reload()')
+
+    def toggleAccessibilityMode(self):
+        settings = globalSettings
+
+        if (settings.accessibilityMode == True):
+            settings.fontWeight = 400
+            settings.accessibilityMode = False
+        else:
+            settings.fontWeight = 700
+            settings.accessibilityMode = True
+
+        self.storeNewSettings(settings)
+
+        # UI CALLBACK: Force Refresh
         ui.run_javascript('window.location.reload()')
 
     def render(self):
@@ -49,6 +64,7 @@ class SettingsPage:
         
         ui.label('Settings').style(f'color: {colours.text_primary}; font-size: 200%')
 
-        SettingsTile("Dark mode", "dark_mode", "#5d47ff", "white", False, lambda: self.updateSettingsAndStore() )
+        SettingsTile("Dark mode", "dark_mode", "#5d47ff", "white", self.__settings.darkMode, lambda: self.toggleDarkMode())
+        SettingsTile("Accessibility mode", "visibility", "#cf9800", "white", self.__settings.accessibilityMode, lambda: self.toggleAccessibilityMode())
         
         

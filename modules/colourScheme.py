@@ -151,18 +151,18 @@ Theme = ColourScheme(
         )
 
 DarkTheme = ColourScheme(
-            bg='#0A1F19',
-            surface='#122B24',
-            accent='#2DBC87',
-            btn_bg='#1A3D33',
-            btn_fg='#4ADEA6',
-            text_p='#E6FFFA',
-            text_s='#A0B0AD',
-            text_ph='#4F5E5A',
-            pos='#34D399',
-            neg='#FB7185',
-            sb_act_bg='#1A3D33',
-            sb_act_fg='#2DBC87',
-            sb_inact_bg='#0A1F19',
-            sb_inact_fg='#4F5E5A'
+            bg='#121212',           
+            surface='#1E1E1E',      
+            accent='#24986D',       
+            btn_bg='#2D2D2D',       
+            btn_fg='#24986D',       
+            text_p='#FFFFFF',       
+            text_s='#B0B0B0',      
+            text_ph='#666666',      
+            pos='#24986D',         
+            neg='#CF6679',          
+            sb_act_bg='#24986D1A', 
+            sb_act_fg='#24986D',    
+            sb_inact_bg='transparent', 
+            sb_inact_fg='#757575'   
         )

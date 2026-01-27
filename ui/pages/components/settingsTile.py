@@ -1,6 +1,7 @@
 from nicegui import ui
 from typing import Callable
 from dataclasses import dataclass
+from modules.globalSettings import globalSettings, GlobalSettings
 
 @dataclass
 class SettingsTile(ui.row):
@@ -12,7 +13,7 @@ class SettingsTile(ui.row):
         self.__icon_colour = icon_colour
         
         # self.classes('w-full items-center justify-between py-2 px-4 bg-transparent')
-        self.classes('w-full py-2 px-4 bg-transparent')
+        self.classes('w-full py-2 px-0 bg-transparent')
         
         with self:
             with ui.row().classes('items-center gap-4'):
@@ -29,7 +30,7 @@ class SettingsTile(ui.row):
                     ui.icon(self.__icon, color=self.__icon_colour).classes('text-lg')
 
                 
-                ui.label(self.__label).classes('text-md font-medium')
+                ui.label(self.__label).classes('text-md font-medium').style(f'color: {globalSettings.theme.text_primary}')
 
             self.switch = ui.switch(value=initial_value, on_change=on_change).props('keep-color color=green dense').style(f'margin-top: 6px;')
 

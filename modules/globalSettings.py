@@ -8,9 +8,29 @@ class GlobalSettings:
     def __init__(self):
         # Default Forest Green palette from Section 2 of the Spec
         self.__theme : ColourScheme = Theme
-        self.__darkMode : bool = False
         self.__currency : str = "USD" 
         self.__currentPage : str = None
+        self.__fontWeight : int = 400
+        
+        # Switches for settings page
+        self.__darkMode : bool = False
+        self.__accessibilityMode : bool = False
+
+    @property
+    def fontWeight(self) -> int:
+        return self.__fontWeight
+    
+    @fontWeight.setter
+    def fontWeight(self, value : int):
+        self.__fontWeight = value
+
+    @property
+    def accessibilityMode(self) -> bool:
+        return self.__accessibilityMode
+    
+    @accessibilityMode.setter
+    def accessibilityMode(self, value : bool):
+        self.__accessibilityMode = value
 
     @property
     def currentPage(self) -> str:
@@ -54,8 +74,8 @@ class GlobalSettings:
             row = cursor.fetchone()
             if row:
                 # Reconstruct the singleton state from the BLOB
-                saved_settings = pickle.loads(row[0])
-                instance = self() # Get the singleton instance
+                saved_settings : GlobalSettings = pickle.loads(row[0])
+                instance : GlobalSettings = self() # Get the singleton instance
                 instance.theme = saved_settings.theme
                 instance.darkMode = saved_settings.darkMode
                 instance.currency = saved_settings.currency
