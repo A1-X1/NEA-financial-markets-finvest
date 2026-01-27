@@ -10,7 +10,7 @@ class GlobalSettings:
         self.__theme : ColourScheme = Theme
         self.__currency : str = "USD" 
         self.__currentPage : str = None
-        self.__fontWeight : int = 400
+        self.__fontWeight : int = 500
         
         # Switches for settings page
         self.__darkMode : bool = False

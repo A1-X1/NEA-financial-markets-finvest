@@ -48,7 +48,7 @@ class SettingsPage:
         settings = globalSettings
 
         if (settings.accessibilityMode == True):
-            settings.fontWeight = 400
+            settings.fontWeight = 500
             settings.accessibilityMode = False
         else:
             settings.fontWeight = 700

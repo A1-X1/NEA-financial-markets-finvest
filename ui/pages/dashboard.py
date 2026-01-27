@@ -3,32 +3,42 @@ from modules.globalSettings import globalSettings
 from ui.pages.components.sideButton import SideButton
 
 class DashboardLayout:
-    """
-    Refactored to support NiceGUI Routing.
-    This class now renders the 'Shell' (Sidebar & Styling) around the active page content.
-    """
     def __init__(self):
         self.__settings = globalSettings
         
 
     def render(self, active_route: str):
         colours = self.__settings.theme
+        weight = self.__settings.fontWeight
 
-        # 1. Apply Global Styles
         ui.query('body').style(f'background-color: {colours.background}; font-weight: {self.__settings.fontWeight}')
+        ui.add_head_html(f'''
+            <style>
 
-        # 2. Render Sidebar
-        # FIXED: Removed '...' and ensured valid CSS styling
+                *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(.ignore-bold) {{ 
+                    font-weight: {weight} !important; 
+                }}
+                
+                .q-item__label, .q-btn__content, .nicegui-label {{
+                    font-weight: {weight} !important;
+                }}
+                
+                /* Ensure background colors still update via query */
+
+                body {{ background-color: {colours.background} !important; }}
+                .my-sidebar {{ background-color: {colours.surface} !important; }}
+            </style>
+        ''')
+
+        # Render Sidebar
         sidebar_style = f'background-color: {colours.surface}; padding: 0; padding-bottom: 20px;'
         
         with ui.left_drawer().style(sidebar_style).classes('flex flex-col items-center gap-0'):
             
             # App Title
-            ui.label('FINVEST').style(f'color: {colours.text_primary}; font-size: 24px; font-weight: bold; margin-bottom: 20px;').classes('p-5 flex items-center justify-center w-full')
+            ui.label('FINVEST').style(f'color: {colours.text_primary}; font-size: 24px; font-weight: bold; margin-bottom: 20px;').classes('p-5 flex items-center justify-center w-full ignore-bold')
 
-            # 3. Define Navigation Logic
-            # We recreate the buttons here, checking against 'active_route'
-            
+            # Navigation Logic
             SideButton(
                 buttonLabel='Home', 
                 icon='home', 
