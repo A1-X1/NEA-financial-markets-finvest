@@ -5,8 +5,24 @@ from modules.database.database import cursor, connection
 
 @dataclass
 class GlobalSettings:
-    def __init__(self):
-        # Default Forest Green palette from Section 2 of the Spec
+
+    __instance = None
+        
+    def __new__(cls):
+        """
+        Enforces a single instance of the class across the application lifecycle.
+        Logic: Returns existing instance if present, otherwise creates and hydrates it.
+        """
+        if cls.__instance is None:
+            cls.__instance = super(GlobalSettings, cls).__new__(cls)
+            cls.__instance.load_from_db()
+        return cls.__instance
+    
+    def __initialize_attributes(self):
+        """
+        Sets default values for private attributes upon initial creation.
+        Logic: Required because @dataclass default values can conflict with Singleton __new__.
+        """
         self.__theme : ColourScheme = Theme
         self.__currency : str = "USD" 
         self.__currentPage : str = None

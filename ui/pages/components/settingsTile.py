@@ -13,7 +13,7 @@ class SettingsTile(ui.row):
         self.__icon_colour = icon_colour
         
         # self.classes('w-full items-center justify-between py-2 px-4 bg-transparent')
-        self.classes('w-full py-2 px-0 bg-transparent')
+        self.classes('w-[400px] justify-between py-2 px-0 bg-transparent')
         
         with self:
             with ui.row().classes('items-center gap-4'):

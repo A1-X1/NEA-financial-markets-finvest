@@ -1,5 +1,6 @@
 from nicegui import ui
 from modules.globalSettings import GlobalSettings, globalSettings
+from ui.pages.components.homeWidget import HomeWidget
 
 class HomePage:
     def __init__(self):
@@ -13,4 +14,7 @@ class HomePage:
         with ui.card().style(f'background-color: {colours.surface}'):
             # Accessing properties through the getter methods
             ui.label(f'Active Currency: {self.__settings.currency}').style(f'color: {colours.text_primary}')
-            
+
+        HomeWidget()
+
+        
