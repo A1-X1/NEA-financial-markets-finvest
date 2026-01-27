@@ -1,10 +1,9 @@
 from nicegui import ui
-from modules.globalSettings import GlobalSettings
-from modules.colourScheme import Theme
+from modules.globalSettings import GlobalSettings, globalSettings
 from typing import Callable
 
 class SideButton(ui.button):
-
+    
     def __init__(self, buttonLabel : str, icon: str, callbackFunction : Callable, isActive: bool = False):
         self.__isActive = isActive,
         self.__buttonLabel = buttonLabel
@@ -12,6 +11,7 @@ class SideButton(ui.button):
         self.__external_callback = callbackFunction
 
         super().__init__(color=None, on_click=self.__handle_click)
+
 
         self.update()
         self.applyStyles()
@@ -33,6 +33,8 @@ class SideButton(ui.button):
 
     # the colour isnt getting applied
     def applyStyles(self):
+        Theme = globalSettings.theme
+
         self.classes('w-full rounded-8 no-shadow cursor-pointer')
         self.props(f':ripple="false" flat unelevated ')
 

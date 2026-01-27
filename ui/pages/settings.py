@@ -1,13 +1,33 @@
 from nicegui import ui
-from modules.globalSettings import GlobalSettings
+from modules.globalSettings import GlobalSettings, globalSettings
 from ui.pages.components.settingsTile import SettingsTile
+from modules.database.database import cursor, connection
+import pickle
 
 class SettingsPage:
-    def __init__(self, settings: GlobalSettings):
-        self.__settings = settings
+    def __init__(self):
+        self.__settings = globalSettings
 
     def placeholder():
         pass
+
+    def updateSettingsAndStore(self, settings : GlobalSettings):
+
+
+        binaryData = pickle.dumps(settings)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS GlobalSettingsTable (
+                id INTEGER PRIMARY KEY CHECK (id = 1), 
+                data BLOB
+            )
+        """)
+
+        cursor.execute("""
+            INSERT OR REPLACE INTO GlobalSettings (id, data) 
+            VALUES (1, ?)
+        """, (binaryData,))
+
+        connection.commit()
 
     def render(self):
         colours = self.__settings.theme

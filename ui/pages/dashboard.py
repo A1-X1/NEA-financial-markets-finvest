@@ -1,13 +1,13 @@
 from nicegui import ui
-from modules.globalSettings import GlobalSettings
+from modules.globalSettings import GlobalSettings, globalSettings
 from ui.pages.components.sideButton import SideButton
 from ui.pages.home import HomePage
 from ui.pages.settings import SettingsPage
 from typing import List
 
 class DashboardLayout:
-    def __init__(self, settings: GlobalSettings):
-        self.__settings = settings
+    def __init__(self):
+        self.__settings = globalSettings
         self.__content_area = None
         self.__nav_buttons : list[SideButton] = [] # List to track button instances
     
@@ -24,7 +24,7 @@ class DashboardLayout:
         self.__update_active_button(target_button)
         self.__content_area.clear()
         with self.__content_area:
-            home = HomePage(self.__settings)
+            home = HomePage()
             home.render()
 
     def load_settings_page(self, nav_button : SideButton = None):
@@ -34,7 +34,7 @@ class DashboardLayout:
         self.__update_active_button(target_button)
         self.__content_area.clear()
         with self.__content_area:
-            home = SettingsPage(self.__settings)
+            home = SettingsPage()
             home.render()
 
     def build_ui(self):

@@ -1,9 +1,9 @@
 from nicegui import ui
-from modules.globalSettings import GlobalSettings
+from modules.globalSettings import GlobalSettings, globalSettings
 
 class HomePage:
-    def __init__(self, settings: GlobalSettings):
-        self.__settings = settings
+    def __init__(self):
+        self.__settings = globalSettings
 
     def render(self):
         colours = self.__settings.theme

@@ -1,11 +1,9 @@
 from nicegui import ui
 from modules.globalSettings import GlobalSettings
 from ui.pages.dashboard import DashboardLayout
-
 from nicegui import ui
 
-settings = GlobalSettings()
-layout = DashboardLayout(settings)
+layout = DashboardLayout()
 
 @ui.page('/')
 def index():
