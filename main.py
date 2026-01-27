@@ -60,5 +60,5 @@ def news():
         page.render()
 
 
-
+# Runs the main app
 ui.run(title="Finvest Risk Manager", port=8080, native=False)
