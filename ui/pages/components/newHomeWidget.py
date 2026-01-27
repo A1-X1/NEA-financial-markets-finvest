@@ -2,6 +2,12 @@ from nicegui import ui
 from typing import Callable
 from modules.globalSettings import globalSettings
 
+ui.add_css('''
+    .add-icon {
+        font-weight: 700 !important;
+    }
+''', shared=True)
+
 class NewHomeWidget(ui.element):
     def __init__(self, on_click: Callable):
         # Initialise as a div
