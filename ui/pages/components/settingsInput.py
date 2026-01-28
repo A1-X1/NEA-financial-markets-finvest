@@ -3,6 +3,8 @@ from typing import Callable
 from dataclasses import dataclass
 from modules.globalSettings import globalSettings
 from currency_codes import get_currency_by_code, Currency, CurrencyNotFoundError
+from currency_symbols import CurrencySymbols
+import re
 
 ui.add_css('''
     .input-field .q-field__native {
@@ -69,9 +71,9 @@ class SettingsInput(ui.row):
         if self.__input_field.value:
             self.__input_field.value = self.__input_field.value.upper()
 
-    def __show_validation_error(self):
+    def __show_validation_error(self, message : str):
         ui.notify(
-            f'Validation Error: {self.__label} must be exactly 3 characters.',
+            f'Validation Error: {message}',
             position='top',
             type='negative',
             icon='priority_high',
@@ -98,8 +100,13 @@ class SettingsInput(ui.row):
 
     def __handle_manual_save(self):
         currencyInput = self.__input_field.value
-        if (len(currencyInput) != 3):
-            self.__show_validation_error()
+
+        if (len(currencyInput) == 0):
+            self.__show_validation_error('Field cannot be empty.')
+            return
+        
+        if not re.match(r'^[A-Za-z]+$', currencyInput):
+            self.__show_validation_error('Use currency codes, not symbols.')
             return
         
         try:
