@@ -109,6 +109,10 @@ class SettingsInput(ui.row):
             self.__show_validation_error('Use currency codes, not symbols.')
             return
         
+        if (len(currencyInput) != 3):
+            self.__show_validation_error('Currency code must be exactly 3 characters.')
+            return
+        
         try:
             get_currency_by_code(currencyInput)
         except CurrencyNotFoundError:
