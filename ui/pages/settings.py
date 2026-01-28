@@ -5,6 +5,7 @@ from ui.pages.components.settingsTile import SettingsTile
 from ui.pages.components.settingsInput import SettingsInput
 from modules.database.database import cursor, connection
 import pickle
+from currency_codes import get_currency_by_code, Currency
 
 class SettingsPage:
     def __init__(self):

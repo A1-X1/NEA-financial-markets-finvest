@@ -2,6 +2,7 @@ from nicegui import ui
 from typing import Callable
 from dataclasses import dataclass
 from modules.globalSettings import globalSettings
+from currency_codes import get_currency_by_code, Currency, CurrencyNotFoundError
 
 ui.add_css('''
     .input-field .q-field__native {
@@ -50,7 +51,7 @@ class SettingsInput(ui.row):
                 ui.label(self.__label).classes('text-md font-medium').style(f'color: {current_text_color}')
 
             with ui.row().classes('items-center gap-2'):
-                self.__input_field = ui.input(value=initial_value).props('outlined dense').style(
+                self.__input_field = ui.input(value=initial_value, on_change=self.__force_uppercase).props('outlined dense').style(
                 f'width: 150px; '
                 f'color: {current_text_color}; '           # Sets the text color inside
                 f'--q-primary: {current_text_color}; '     # Sets the Quasar primary (active border)
@@ -58,11 +59,60 @@ class SettingsInput(ui.row):
                 f'border-color: {current_text_color};'     # Sets the base border color
             ).classes('input-field')
                 
-                self.__save_button = ui.button('Save', on_click=lambda: self.__on_save(self.__input_field.value)).style(
+                self.__save_button = ui.button('Save', on_click=self.__handle_manual_save).style(
                     f'background-color: {globalSettings.theme.button_background} !important ; '
                     f'color: {globalSettings.theme.button_foreground} !important;'
                     
                 ).props(f':ripple="false" unelevated')
+
+    def __force_uppercase(self):
+        if self.__input_field.value:
+            self.__input_field.value = self.__input_field.value.upper()
+
+    def __show_validation_error(self):
+        ui.notify(
+            f'Validation Error: {self.__label} must be exactly 3 characters.',
+            position='top',
+            type='negative',
+            icon='priority_high',
+            close_button=True
+        )
+
+    def __show_currency_saved(self):
+        ui.notify(
+            f'Settings Saved',
+            position='top',
+            type='positive',
+            icon='settings',
+            close_button=True
+        )
+
+    def __show_validation_error_nonexistant_currency(self):
+        ui.notify(
+            f'Validation Error: {self.__input_field.value} is not a valid currency code.',
+            position='top',
+            type='negative',
+            icon='priority_high',
+            close_button=True
+        )
+
+    def __handle_manual_save(self):
+        currencyInput = self.__input_field.value
+        if (len(currencyInput) != 3):
+            self.__show_validation_error()
+            return
+        
+        try:
+            get_currency_by_code(currencyInput)
+        except CurrencyNotFoundError:
+            self.__show_validation_error_nonexistant_currency()
+            return
+        except Exception as e:
+            print(e)
+            return
+        
+        self.__on_save(currencyInput)
+
 
     @property
     def current_value(self) -> str:
