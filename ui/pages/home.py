@@ -3,6 +3,7 @@ from modules.globalSettings import GlobalSettings, globalSettings
 from ui.pages.components.homeWidget import HomeWidget
 from ui.pages.components.newHomeWidget import NewHomeWidget
 import plotly.graph_objects as go
+from currency_codes import Currency
 
 class HomePage:
     def __init__(self):
@@ -25,7 +26,7 @@ class HomePage:
                     with ui.element('div').classes('px-4 py-2 rounded-full shadow-sm flex items-center gap-2') \
                             .style(f'background-color: {colours.surface}'):
                         ui.icon('monetization_on').style(f'color: {colours.accent}')
-                        ui.label(f'{self.__settings.currency}').style(f'color: {colours.text_primary}; font-weight: 600')
+                        ui.label(f'{self.__settings.currencySymbol}{self.__settings.currency.code}').style(f'color: {colours.text_primary}; font-weight: 600')
 
                 # --- GRID LAYOUT ---
                 # grid-cols-1: Mobile (1 column)

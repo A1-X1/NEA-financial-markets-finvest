@@ -78,14 +78,14 @@ class SettingsInput(ui.row):
             close_button=True
         )
 
-    def __show_currency_saved(self):
-        ui.notify(
-            f'Settings Saved',
-            position='top',
-            type='positive',
-            icon='settings',
-            close_button=True
-        )
+    # def __show_currency_saved(self):
+    #     ui.notify(
+    #         f'Settings Saved',
+    #         position='top',
+    #         type='positive',
+    #         icon='settings',
+    #         close_button=True
+    #     )
 
     def __show_validation_error_nonexistant_currency(self):
         ui.notify(

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import pickle
 from modules.colourScheme import ColourScheme, Theme
 from modules.database.database import cursor, connection
+from currency_codes import Currency, CurrencyNotFoundError, get_currency_by_code
 
 @dataclass
 class GlobalSettings:
@@ -15,6 +16,7 @@ class GlobalSettings:
         """
         if cls.__instance is None:
             cls.__instance = super(GlobalSettings, cls).__new__(cls)
+            cls.__instance.__initialize_attributes()
             cls.__instance.load_from_db()
         return cls.__instance
     
@@ -24,13 +26,23 @@ class GlobalSettings:
         Logic: Required because @dataclass default values can conflict with Singleton __new__.
         """
         self.__theme : ColourScheme = Theme
-        self.__currency : str = "USD" 
+        self.__currency : Currency = get_currency_by_code('USD')
         self.__currentPage : str = None
         self.__fontWeight : int = 500
+        self.__currencySymbol : str = '$'
         
         # Switches for settings page
         self.__darkMode : bool = False
         self.__accessibilityMode : bool = False
+
+    @property
+    def currencySymbol(self) -> str:
+        return self.__currencySymbol
+    
+    @currencySymbol.setter
+    def currencySymbol(self, value: str):
+        self.__currencySymbol = value
+
 
     @property
     def fontWeight(self) -> int:
@@ -77,11 +89,11 @@ class GlobalSettings:
         self.__darkMode = value
 
     @property
-    def currency(self) -> str:
+    def currency(self) -> Currency:
         return self.__currency
 
     @currency.setter
-    def currency(self, value: str):
+    def currency(self, value: Currency):
         self.__currency = value
 
     def load_from_db(self):

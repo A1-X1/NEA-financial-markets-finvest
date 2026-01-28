@@ -6,6 +6,7 @@ from ui.pages.components.settingsInput import SettingsInput
 from modules.database.database import cursor, connection
 import pickle
 from currency_codes import get_currency_by_code, Currency
+from currency_symbols import CurrencySymbols
 
 class SettingsPage:
     def __init__(self):
@@ -62,13 +63,16 @@ class SettingsPage:
         # UI CALLBACK: Force Refresh
         ui.run_javascript('window.location.reload()')
 
-    def updateCurrency(self, newCurrency : str):
+    def updateCurrency(self, currency : str):
         settings = globalSettings
         
+        newCurrency = get_currency_by_code(currency)
+
         if (newCurrency == None):
             return
         else:
             settings.currency = newCurrency
+            settings.currencySymbol = CurrencySymbols.get_symbol(currency)
 
         self.storeNewSettings(settings)
 
@@ -82,6 +86,6 @@ class SettingsPage:
 
         SettingsTile("Dark mode", "dark_mode", "#5d47ff", "white", self.__settings.darkMode, lambda: self.toggleDarkMode())
         SettingsTile("Accessibility mode", "visibility", "#cf9800", "white", self.__settings.accessibilityMode, lambda: self.toggleAccessibilityMode())
-        self.__currencyInput = SettingsInput("Currency", "monetization_on", "#08a112", "white", self.__settings.currency, lambda newCurrency : self.updateCurrency(newCurrency))
+        self.__currencyInput = SettingsInput("Currency", "monetization_on", "#08a112", "white", self.__settings.currency.code, lambda newCurrency : self.updateCurrency(newCurrency))
         
         
