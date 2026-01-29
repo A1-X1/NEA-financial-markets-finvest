@@ -6,20 +6,19 @@ from modules.globalSettings import globalSettings
 
 @dataclass
 class Visualisation:
-    # 1. Public Inputs
     title_input: str
     data_input: pd.DataFrame
-    currency_input: str  # New input field
+    currency_input: str
     
-    # 2. Private Storage
     __chart_title: str = field(init=False, repr=False)
     __data: pd.DataFrame = field(init=False, repr=False)
     __currency: str = field(init=False, repr=False)
 
     def __post_init__(self):
+        # Using setters to ensure validation logic is triggered
         self.chart_title = self.title_input
         self.data = self.data_input
-        self.__currency = self.currency_input
+        self.currency = self.currency_input
 
     @property
     def chart_title(self) -> str:
@@ -45,17 +44,31 @@ class Visualisation:
     def currency(self) -> str:
         return self.__currency
 
+    @currency.setter
+    def currency(self, value: str):
+        if not value:
+            self.__currency = "USD"
+        else:
+            self.__currency = value
+
     def _apply_theme_layout(self, fig: go.Figure):
         theme = globalSettings.theme
         fig.update_layout(
-            paper_bgcolor=theme.background,
-            plot_bgcolor=theme.surface,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             font=dict(color=theme.text_primary),
             title_font=dict(color=theme.accent),
-            # Add grid colors
-            xaxis=dict(gridcolor=theme.text_placeholder, zerolinecolor=theme.accent),
-            yaxis=dict(gridcolor=theme.text_placeholder, zerolinecolor=theme.accent),
-            margin=dict(l=20, r=40, t=40, b=20)
+            xaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)', 
+                zerolinecolor=theme.accent,
+                tickfont=dict(color=theme.text_secondary)
+            ),
+            yaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)', 
+                zerolinecolor=theme.accent,
+                tickfont=dict(color=theme.text_secondary)
+            ),
+            margin=dict(l=40, r=40, t=60, b=40)
         )
         return fig
 
@@ -63,16 +76,14 @@ class Visualisation:
 class RiskTrendVisualisation(Visualisation):
     def generate_chart(self) -> go.Figure:
         theme = globalSettings.theme
-        
-        # Label the Y-Axis with the currency
         y_label = f'Price ({self.currency})'
         
         fig = px.line(
             self.data, 
             x='Date', 
             y='Close', 
-            title=f"{self.chart_title} ({self.currency})", # Add currency to title
-            labels={'Close': y_label} # Add currency to hover tooltip/axis
+            title=f"{self.chart_title}",
+            labels={'Close': y_label, 'Date': 'Trading Date'}
         )
         
         fig.update_traces(line_color=theme.accent, line_width=2)

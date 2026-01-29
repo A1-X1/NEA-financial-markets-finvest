@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 from modules.globalSettings import globalSettings
 from ui.pages.components.dataHandler import DataHandler
 from ui.pages.components.visualisation import RiskTrendVisualisation
-from modules.calculations import calculateSharpeRatio
+from modules.calculations import calculateSharpeRatio, calculateVolatility, calculateTotalReturn
 
 
 # GLOBAL CSS 
@@ -144,34 +144,30 @@ class ChartsPage:
 
     def __generate_chart(self):
         ticker = self.__ticker_input.value
-        custom_title = self.__title_input.value
         timeframe = self.__timeframe_dropdown.value
         
         if not ticker:
             ui.notify('Please enter a ticker symbol.', type='warning')
             return
 
-        ui.notify(f'Loading {ticker}...', color='positive', timeout=1000)
-
         try:
             handler = DataHandler()
             handler.ticker_symbol = ticker
             handler.period = timeframe
-            print(f'TimeFrame: {handler.period}')
             handler.fetch_market_data()
             
             processed_data = handler.prepare_risk_data()
-            currency = handler.currency
-
+            
+            # Calculate Sharpe Ratio
             sharpe_val = calculateSharpeRatio(processed_data)
+            vol_val = calculateVolatility(processed_data)
+            ret_val = calculateTotalReturn(processed_data)
 
-            final_title = custom_title if custom_title and len(custom_title.strip()) >= 3 \
-                         else f"{ticker.upper()} Price Trend"
-
+            # Update Chart
             viz = RiskTrendVisualisation(
-                title_input=final_title,
+                title_input=self.__title_input.value or f"{ticker.upper()} Trend",
                 data_input=processed_data,
-                currency_input=currency
+                currency_input=handler.currency
             )
             fig = viz.generate_chart()
 
@@ -179,23 +175,32 @@ class ChartsPage:
             with self.__chart_container:
                 ui.plotly(fig).classes('w-full h-full')
 
-            # Update Metrics Area
-            # This renders the Sharpe Ratio below the chart as requested
+            # Update Main UI Metrics Container
             self.__metrics_container.clear()
-            with self.__metrics_container:
-                with ui.card().classes('items-center p-4 bg-transparent border-none shadow-none'):
-                    ui.label('Annualised Sharpe Ratio').style(
-                        f'color: {self.__settings.theme.text_secondary}; font-size: 0.9rem'
-                    )
-                    ui.label(f'{sharpe_val}').style(
-                        f'color: {self.__settings.theme.text_primary}; font-size: 2.5rem; font-weight: bold'
-                    )
-                    
-                    # Logic: Qualitative interpretation for Stakeholders
-                    color = 'positive' if sharpe_val > 1 else 'warning' if sharpe_val > 0 else 'negative'
-                    label = 'High Risk-Adjusted Return' if sharpe_val > 1 else 'Sub-optimal'
-                    ui.badge(label, color=color).props('outline')
+            with self.__metrics_container.classes('w-full grid grid-cols-1 md:grid-cols-3 gap-4'):
+                
+                # Sharpe Card
+                sharpe_status = "High Performance" if sharpe_val > 1 else "Sub-optimal"
+                self.createMetricCard('Sharpe Ratio', f'{sharpe_val:.2f}', sharpe_status, 
+                                     'positive' if sharpe_val > 1 else 'warning')
+                
+                # Volatility Card
+                vol_status = "High Risk" if vol_val > 0.35 else "Stable"
+                self.createMetricCard('Annual Volatility', f'{vol_val:.2%}', vol_status,
+                                     'warning' if vol_val > 0.35 else 'positive')
+                
+                # Performance Card
+                ret_status = "Profitable" if ret_val > 0 else "Loss"
+                self.createMetricCard('Total Return', f'{ret_val:.2f}%', ret_status,
+                                     'positive' if ret_val > 0 else 'negative')
 
         except Exception as e:
             ui.notify(f"Error: {str(e)}", type='negative')
-            self.__render_empty_chart()
+        
+    def createMetricCard(self, title_text, value_text, status_label, badge_color):
+        """Helper to create interpreted metric cards for the NEA stakeholder."""
+        theme = self.__settings.theme
+        with ui.card().classes('items-center p-6 bg-transparent border border-gray-100/10 shadow-none'):
+            ui.label(title_text).style(f'color: {theme.text_secondary}; font-size: 0.9rem')
+            ui.label(value_text).style(f'color: {theme.text_primary}; font-size: 2.8rem; font-weight: bold')
+            ui.badge(status_label, color=badge_color).props('outline')

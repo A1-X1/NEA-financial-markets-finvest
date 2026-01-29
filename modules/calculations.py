@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 def calculateSharpeRatio(data: pd.DataFrame, risk_free_rate: float = 0.02) -> float:
-    
     """
     Calculates the Annualised Sharpe Ratio.
     (Mean Annual Return - Risk Free Rate) / Annualised Volatility
@@ -26,3 +25,17 @@ def calculateSharpeRatio(data: pd.DataFrame, risk_free_rate: float = 0.02) -> fl
     sharpe_ratio = (annualised_return - risk_free_rate) / annualised_volatility
     
     return round(sharpe_ratio, 2)
+
+def calculateVolatility(data_frame):
+    """Calculates annualised volatility (standard deviation of returns)."""
+    daily_returns = data_frame['Close'].pct_change().dropna()
+    # 252 is the standard number of trading days in a year
+    annualised_vol = daily_returns.std() * np.sqrt(252)
+    return annualised_vol
+
+def calculateTotalReturn(data_frame):
+    """Calculates the percentage growth over the specific period."""
+    initial_price = data_frame['Close'].iloc[0]
+    final_price = data_frame['Close'].iloc[-1]
+    percentage_growth = ((final_price - initial_price) / initial_price) * 100
+    return percentage_growth
