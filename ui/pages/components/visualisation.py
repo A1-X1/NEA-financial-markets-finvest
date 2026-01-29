@@ -10,12 +10,12 @@ class Visualisation:
     title_input: str
     data_input: pd.DataFrame
     
-    # 2. Define private storage fields that the dataclass won't try to 'init' automatically
+    # 2. Define private storage fields (init=False prevents them from being arguments in __init__)
     __chart_title: str = field(init=False, repr=False)
     __data: pd.DataFrame = field(init=False, repr=False)
 
     def __post_init__(self):
-        # 3. This triggers the @setters below, ensuring validation happens on start
+        # 3. Trigger setters using the inputs provided
         self.chart_title = self.title_input
         self.data = self.data_input
 
@@ -56,7 +56,7 @@ class Visualisation:
 class RiskTrendVisualisation(Visualisation):
     def generate_chart(self) -> go.Figure:
         theme = globalSettings.theme
-        # Use self.data (the property) rather than __data (the mangled private field)
+        # Use self.data (the property) for plotting
         fig = px.line(self.data, x='Date', y='Close', title=self.chart_title)
         fig.update_traces(line_color=theme.accent, line_width=2)
         return self._apply_theme_layout(fig)

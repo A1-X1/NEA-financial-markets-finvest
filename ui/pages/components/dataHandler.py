@@ -41,6 +41,7 @@ class DataHandler:
         if data.empty:
             raise ValueError(f"DataHandler: No data found for ticker '{self.__ticker_symbol}'.")
         
+        # reset_index moves 'Date' from the index to a column
         self.__raw_data = data.reset_index()
         return self.__raw_data
 
@@ -49,8 +50,18 @@ class DataHandler:
             raise ValueError("DataHandler: Cannot prepare data before fetching.")
         
         df = self.__raw_data.copy()
+        
+        # Calculate returns (Math operations work best on Timestamps, so we do this first)
         df['Daily_Return'] = df['Close'].pct_change()
         df['Volatility'] = df['Daily_Return'].rolling(window=5).std()
         
-        self.__processed_data = df.dropna()
+        df = df.dropna()
+
+        # --- THE FIX IS HERE ---
+        # Convert the 'Date' column from Timestamp objects to Strings.
+        # JSON cannot handle Timestamp objects, but it can handle Strings.
+        if 'Date' in df.columns:
+            df['Date'] = df['Date'].astype(str)
+        
+        self.__processed_data = df
         return self.__processed_data

@@ -55,7 +55,6 @@ class MarketChartWidget(HomeWidget):
     def refresh_data(self):
         """
         Coordinates between the Logic (DataHandler) and UI (Visualisation).
-        Demonstrates 'Separation of Concerns'.
         """
         try:
             # Logic Layer
@@ -63,10 +62,10 @@ class MarketChartWidget(HomeWidget):
             processed_data = self.__handler.prepare_risk_data()
 
             # Visualization Layer
-            # Note: We pass standard arguments, the class handles private storage
+            # FIX: Used 'title_input' and 'data_input' to match the Visualisation dataclass fields
             viz = RiskTrendVisualisation(
-                title=f"{self.__ticker} Price Trend",
-                data=processed_data
+                title_input=f"{self.__ticker} Price Trend",
+                data_input=processed_data
             )
             fig = viz.generate_chart()
 
@@ -78,4 +77,5 @@ class MarketChartWidget(HomeWidget):
         except Exception as e:
             with self.__chart_container:
                 self.__chart_container.clear()
-                ui.label(f"⚠️ {self.__ticker}: {str(e)}").classes('text-red-400 text-xs text-center p-4')
+                # Print error to UI for easier debugging
+                ui.label(f"{self.__ticker} Error: {str(e)}").classes('text-red-400 text-xs text-center p-4')
