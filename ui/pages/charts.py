@@ -4,13 +4,12 @@ from modules.globalSettings import globalSettings
 from ui.pages.components.dataHandler import DataHandler
 from ui.pages.components.visualisation import RiskTrendVisualisation
 
-# --- 1. GLOBAL CSS UPDATED (AO3: UI Polish) ---
+# --- GLOBAL CSS (Advanced Customization for OCR NEA) ---
 ui.add_css('''
-    .input-field .q-field__native {
+    .input-field .q-field__native, .input-field .q-item__label {
         color: var(--custom-input-color) !important;
     }
     
-    /* Targets the label/placeholder text color */
     .input-field .q-field__label, 
     .input-field .q-field__native::placeholder {
         color: var(--custom-placeholder-color) !important;
@@ -25,29 +24,48 @@ ui.add_css('''
         border-color: var(--custom-input-color) !important;
         opacity: 1;
     }
+
+    /* 1. HOVER HIGHLIGHT: Customizes the background and text color when hovering over items */
+    .q-manual-focusable--focused > .q-focus-helper,
+    .q-item--active, 
+    .q-item.q-item--clickable:hover {
+        background: var(--custom-accent-soft) !important;
+        color: var(--custom-input-color) !important;
+        opacity: 1 !important;
+    }
+
+    /* 2. SELECTION OVERRIDE: Ensures the checkmark or active item uses the correct text color */
+    .q-item.q-item--active .q-item__section {
+        color: var(--custom-input-color) !important;
+    }
 ''', shared=True)
 
 class ChartsPage:
     def __init__(self):
         self.__settings = globalSettings
         self.__ticker_input = None 
+        self.__title_input = None
+        self.__timeframe_dropdown = None
         self.__chart_container = None 
 
     def render(self):
         theme = self.__settings.theme
         
-        # Define button styles
-        btn_style = f'background-color: {theme.sb_active_bg} !important; color: {theme.sb_active_fg} !important;'
-        btn_classes = f'shadow-sm font-bold'
-        btn_props = f'flat unelevated'
-
-        # --- DYNAMIC INPUT STYLING ---
-        # We now map text_placeholder to our new CSS variable
+        # Consistent Variables for CSS
         input_style = (
             f'--custom-input-color: {theme.text_primary}; '
             f'--custom-placeholder-color: {theme.text_placeholder}; '
-            f'--q-primary: {theme.accent};' # The border turns to accent color on focus
+            f'--custom-accent-soft: {theme.sb_active_bg}; ' # Using sidebutton active bg for hover
+            f'--q-primary: {theme.accent};'
         )
+
+        # Dropdown Specific Styles
+        dropdown_popup_style = (
+            f'background-color: {theme.surface} !important; '
+            f'color: {theme.text_primary} !important;'
+        )
+        
+        btn_style = f'background-color: {theme.sb_active_bg} !important; color: {theme.sb_active_fg} !important;'
 
         with ui.element('div').classes('w-full h-full flex flex-col p-8 gap-6'):
             
@@ -55,19 +73,41 @@ class ChartsPage:
 
             with ui.row().classes('w-full items-end gap-4'):
                 
-                # The label here will now use theme.text_placeholder
+                # Ticker Input
                 self.__ticker_input = ui.input(label='Ticker Symbol', value='AAPL') \
-                    .classes('w-48 input-field') \
+                    .classes('w-32 input-field') \
+                    .props('outlined dense uppercase') \
+                    .style(input_style)
+                
+                # Timeframe Dropdown 
+                timeframe_options = {
+                    '1d': '1 Day', '5d': '5 Days', '1mo': '1 Month', 
+                    '6mo': '6 Months', 'ytd': 'Year to Date', '1y': '1 Year', 'max': 'Max'
+                }
+                # Note: We apply 'input-field' class to the dropdown so it picks up the global CSS
+                self.__timeframe_dropdown = ui.select(
+                    label='Timeframe', 
+                    options=timeframe_options, 
+                    value='ytd'
+                ).classes('w-40 input-field').style(input_style).props(
+                    f'outlined dense '
+                    f'popup-content-class="input-field" '
+                    f'popup-content-style="{dropdown_popup_style}" '
+                    f'input-style="color: {theme.text_primary}"'
+                )
+
+                # Optional Title Input
+                self.__title_input = ui.input(label='Custom Title (Optional)') \
+                    .classes('w-64 input-field') \
                     .props('outlined dense') \
                     .style(input_style)
                 
-                ui.button('Generate Chart', on_click=self.__generate_chart) \
-                    .style(btn_style).classes(btn_classes) \
-                    .props(btn_props)
-                
-                ui.button('Add to Home', on_click=lambda: ui.notify('Feature coming soon...', color='grey')) \
-                    .style(btn_style).classes(btn_classes) \
-                    .props(btn_props)
+                with ui.row().classes('gap-2'):
+                    ui.button('Generate Chart', on_click=self.__generate_chart) \
+                        .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
+                    
+                    ui.button('Add to Home', on_click=lambda: ui.notify('Widget Configuration Saved', color='positive')) \
+                        .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
 
             self.__chart_container = ui.element('div').classes('w-full flex-grow rounded-xl shadow-sm border border-gray-100/10 p-4 relative') \
                 .style(f'background-color: {theme.surface}')
@@ -84,10 +124,10 @@ class ChartsPage:
             xaxis=dict(showgrid=False, showticklabels=False),
             yaxis=dict(showgrid=False, showticklabels=False),
             annotations=[dict(
-                text="Enter a Ticker and press Generate",
+                text="Configure parameters and press Generate",
                 xref="paper", yref="paper",
                 x=0.5, y=0.5, showarrow=False,
-                font=dict(size=20, color=theme.text_placeholder)
+                font=dict(size=18, color=theme.text_placeholder)
             )]
         )
         fig = go.Figure(layout=layout)
@@ -97,23 +137,29 @@ class ChartsPage:
 
     def __generate_chart(self):
         ticker = self.__ticker_input.value
+        custom_title = self.__title_input.value
+        timeframe = self.__timeframe_dropdown.value
+        
         if not ticker:
             ui.notify('Please enter a ticker symbol.', type='warning')
             return
 
-        ui.notify(f'Fetching data for {ticker}...', color='positive', timeout=1000)
+        ui.notify(f'Loading {ticker}...', color='positive', timeout=1000)
 
         try:
             handler = DataHandler()
             handler.ticker_symbol = ticker
-            handler.period = '1y'
+            handler.period = timeframe
             handler.fetch_market_data()
             
             processed_data = handler.prepare_risk_data()
             currency = handler.currency
 
+            final_title = custom_title if custom_title and len(custom_title.strip()) >= 3 \
+                         else f"{ticker.upper()} Price Trend"
+
             viz = RiskTrendVisualisation(
-                title_input=f"{ticker.upper()} Price Trend",
+                title_input=final_title,
                 data_input=processed_data,
                 currency_input=currency
             )
