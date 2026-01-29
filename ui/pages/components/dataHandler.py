@@ -51,6 +51,7 @@ class DataHandler:
         # 2. Fetch Currency (using info dict)
         try:
             self.__currency = ticker.info.get('currency', 'USD')
+            print(f'Currency for generated graph is: {self.__currency}')
         except Exception:
             self.__currency = "USD" # Fallback
 

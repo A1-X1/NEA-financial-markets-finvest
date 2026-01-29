@@ -4,6 +4,8 @@ from modules.globalSettings import globalSettings
 from ui.pages.components.dataHandler import DataHandler
 from ui.pages.components.visualisation import RiskTrendVisualisation
 
+# FIX PRICE CONVERSIONS
+
 # --- GLOBAL CSS (Advanced Customization for OCR NEA) ---
 ui.add_css('''
     .input-field .q-field__native, .input-field .q-item__label {
@@ -69,7 +71,7 @@ class ChartsPage:
 
         with ui.element('div').classes('w-full h-full flex flex-col p-8 gap-6'):
             
-            ui.label('Market Analysis').style(f'color: {theme.text_primary}; font-size: 200%; font-weight: bold')
+            ui.label('Chart Analysis').style(f'color: {theme.text_primary}; font-size: 200%; font-weight: bold')
 
             with ui.row().classes('w-full items-end gap-4'):
                 
@@ -84,7 +86,7 @@ class ChartsPage:
                     '1d': '1 Day', '5d': '5 Days', '1mo': '1 Month', 
                     '6mo': '6 Months', 'ytd': 'Year to Date', '1y': '1 Year', 'max': 'Max'
                 }
-                # Note: We apply 'input-field' class to the dropdown so it picks up the global CSS
+                # apply 'input-field' class to the dropdown so it picks up the global CSS
                 self.__timeframe_dropdown = ui.select(
                     label='Timeframe', 
                     options=timeframe_options, 
@@ -150,6 +152,7 @@ class ChartsPage:
             handler = DataHandler()
             handler.ticker_symbol = ticker
             handler.period = timeframe
+            print(f'TimeFrame: {handler.period}')
             handler.fetch_market_data()
             
             processed_data = handler.prepare_risk_data()
