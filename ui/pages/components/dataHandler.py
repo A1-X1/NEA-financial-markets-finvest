@@ -20,6 +20,7 @@ class DataHandler:
             raise ValueError("DataHandler: Ticker symbol must be a non-empty string.")
         self.__ticker_symbol = value.upper()
 
+
     @property
     def period(self) -> str:
         return self.__period
