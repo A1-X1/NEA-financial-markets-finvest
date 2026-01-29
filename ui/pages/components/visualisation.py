@@ -1,16 +1,23 @@
+from dataclasses import dataclass, field
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-from dataclasses import dataclass
 from modules.globalSettings import globalSettings
 
 @dataclass
 class Visualisation:
-    # Use constructor arguments that map to private storage in __post_init__ 
-    # for cleaner OCR-level encapsulation
-    def __init__(self, title: str, data: pd.DataFrame):
-        self.chart_title = title
-        self.data = data
+    # 1. Define public-facing arguments for the constructor
+    title_input: str
+    data_input: pd.DataFrame
+    
+    # 2. Define private storage fields that the dataclass won't try to 'init' automatically
+    __chart_title: str = field(init=False, repr=False)
+    __data: pd.DataFrame = field(init=False, repr=False)
+
+    def __post_init__(self):
+        # 3. This triggers the @setters below, ensuring validation happens on start
+        self.chart_title = self.title_input
+        self.data = self.data_input
 
     @property
     def chart_title(self) -> str:
@@ -19,7 +26,7 @@ class Visualisation:
     @chart_title.setter
     def chart_title(self, value: str):
         if not value or len(value) < 3:
-            raise ValueError("Visualisation: Title must be descriptive.")
+            raise ValueError("Visualisation: Title is too short.")
         self.__chart_title = value
 
     @property
@@ -33,7 +40,6 @@ class Visualisation:
         self.__data = value
 
     def _apply_theme_layout(self, fig: go.Figure):
-        """Applies the current global theme to the Plotly figure."""
         theme = globalSettings.theme
         fig.update_layout(
             paper_bgcolor=theme.background,
@@ -48,20 +54,9 @@ class Visualisation:
 
 @dataclass
 class RiskTrendVisualisation(Visualisation):
-    """
-    Inherits from Visualisation. 
-    Focuses on Trend analysis (Prototype 2 requirements).
-    """
     def generate_chart(self) -> go.Figure:
         theme = globalSettings.theme
-        
-        # Accessing data through the public property defined in the parent
-        fig = px.line(
-            self.data, 
-            x='Date', 
-            y='Close', 
-            title=self.chart_title
-        )
-        
+        # Use self.data (the property) rather than __data (the mangled private field)
+        fig = px.line(self.data, x='Date', y='Close', title=self.chart_title)
         fig.update_traces(line_color=theme.accent, line_width=2)
         return self._apply_theme_layout(fig)

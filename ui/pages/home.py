@@ -70,9 +70,7 @@ class HomePage:
                     with widget3.content:
                         ui.label("Market volatility expected to decrease...").classes('text-sm italic').style(f'color: {colours.text_secondary}')
 
-                    widget4 = HomeWidget("Recent News")
-                    with widget4.content:
-                        ui.label("Market volatility expected to rise newwww").classes('text-sm italic').style(f'color: {colours.text_secondary}')
+                    MarketChartWidget(title="Apple Stock Trend", ticker="AAPL")
 
                     NewHomeWidget(on_click=lambda: None)
 
