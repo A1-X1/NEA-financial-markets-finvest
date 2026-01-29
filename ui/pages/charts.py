@@ -84,7 +84,7 @@ class ChartsPage:
                 
                 # Timeframe Dropdown 
                 timeframe_options = {
-                    '1d': '1 Day', '5d': '5 Days', '1mo': '1 Month', 
+                    '1mo': '1 Month', 
                     '6mo': '6 Months', '1y': 'Year to Date', 'max': 'Max'
                 }
                 # apply 'input-field' class to the dropdown so it picks up the global CSS
