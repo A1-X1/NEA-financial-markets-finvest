@@ -1,6 +1,6 @@
 from nicegui import ui
 from modules.globalSettings import GlobalSettings, globalSettings
-from ui.pages.components.homeWidget import HomeWidget
+from ui.pages.components.homeWidget import HomeWidget, MarketChartWidget
 from ui.pages.components.newHomeWidget import NewHomeWidget
 import plotly.graph_objects as go
 from currency_codes import Currency
