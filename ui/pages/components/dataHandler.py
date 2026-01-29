@@ -8,6 +8,7 @@ class DataHandler:
     __period: str = "1mo"
     __raw_data: pd.DataFrame = None
     __processed_data: pd.DataFrame = None
+    __currency: str = "USD"  # Default fallback
 
     @property
     def ticker_symbol(self) -> str:
@@ -31,17 +32,28 @@ class DataHandler:
         self.__period = value
 
     @property
+    def currency(self) -> str:
+        return self.__currency
+
+    @property
     def raw_data(self) -> pd.DataFrame:
         return self.__raw_data
 
     def fetch_market_data(self):
         ticker = yf.Ticker(self.__ticker_symbol)
+        
+        # 1. Fetch Data
         data = ticker.history(period=self.__period)
         
         if data.empty:
             raise ValueError(f"DataHandler: No data found for ticker '{self.__ticker_symbol}'.")
         
-        # reset_index moves 'Date' from the index to a column
+        # 2. Fetch Currency (using basic_info for speed)
+        try:
+            self.__currency = ticker.basic_info.currency
+        except Exception:
+            self.__currency = "USD" # Fallback
+
         self.__raw_data = data.reset_index()
         return self.__raw_data
 
@@ -51,15 +63,13 @@ class DataHandler:
         
         df = self.__raw_data.copy()
         
-        # Calculate returns (Math operations work best on Timestamps, so we do this first)
+        # Calculate returns
         df['Daily_Return'] = df['Close'].pct_change()
         df['Volatility'] = df['Daily_Return'].rolling(window=5).std()
         
         df = df.dropna()
 
-        # --- THE FIX IS HERE ---
-        # Convert the 'Date' column from Timestamp objects to Strings.
-        # JSON cannot handle Timestamp objects, but it can handle Strings.
+        # Fix for JSON Serialization Error (Timestamp -> String)
         if 'Date' in df.columns:
             df['Date'] = df['Date'].astype(str)
         
