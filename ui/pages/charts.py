@@ -50,9 +50,25 @@ class ChartsPage:
         self.__timeframe_dropdown = None
         self.__chart_container = None 
         self.__metrics_container = None
+        # Initialize storage for cached data
+        self._current_processed_data = None
+        self._current_currency = "USD"
+
+    def __toggle_chart_type(self):
+        # 1. Toggle the state
+        self.__chart_mode = 'Candlestick' if self.__chart_mode == 'Line' else 'Line'
+        
+        # 2. Update button icon/label for visual feedback
+        self.__toggle_btn.props(f'icon={"candlestick_chart" if self.__chart_mode == "Candlestick" else "show_chart"}')
+        
+        # 3. Re-run generation logic if data exists
+        if self._current_processed_data is not None:
+            self.__generate_chart(use_cached=True)
 
     def render(self):
         theme = self.__settings.theme
+
+        self.__chart_mode = 'Line' # Initial state
         
         # Consistent Variables for CSS
         input_style = (
@@ -106,11 +122,14 @@ class ChartsPage:
                     .style(input_style)
                 
                 with ui.row().classes('gap-2'):
-                    ui.button('Generate Chart', on_click=self.__generate_chart) \
+                    ui.button('Generate Chart', on_click=lambda: self.__generate_chart(use_cached=False)) \
                         .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
                     
                     ui.button('Add to Home', on_click=lambda: ui.notify('Widget Configuration Saved', color='positive')) \
                         .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
+                    
+                    self.__toggle_btn = ui.button(icon='show_chart', on_click=self.__toggle_chart_type) \
+                        .style(btn_style).props('flat unelevated')
 
             self.__chart_container = ui.element('div').classes('w-full flex-grow rounded-xl shadow-sm border border-gray-100/10 p-4 relative') \
                 .style(f'background-color: {theme.surface}')
@@ -123,6 +142,7 @@ class ChartsPage:
                 self.__render_empty_chart()
 
     def __render_empty_chart(self):
+        """Renders the placeholder before data is loaded."""
         theme = self.__settings.theme
         layout = go.Layout(
             paper_bgcolor='rgba(0,0,0,0)',
@@ -142,7 +162,7 @@ class ChartsPage:
         with self.__chart_container:
             ui.plotly(fig).classes('w-full h-full')
 
-    def __generate_chart(self):
+    def __generate_chart(self, use_cached=False):
         ticker = self.__ticker_input.value
         timeframe = self.__timeframe_dropdown.value
         
@@ -151,25 +171,81 @@ class ChartsPage:
             return
 
         try:
-            handler = DataHandler()
-            handler.ticker_symbol = ticker
-            handler.period = timeframe
-            handler.fetch_market_data()
+            # 1. Logic to handle caching vs fetching new data
+            if use_cached and self._current_processed_data is not None:
+                processed_data = self._current_processed_data
+                currency = self._current_currency
+            else:
+                handler = DataHandler()
+                handler.ticker_symbol = ticker
+                handler.period = timeframe
+                handler.fetch_market_data()
+                processed_data = handler.prepare_risk_data()
+                
+                # Cache the data
+                self._current_processed_data = processed_data
+                self._current_currency = handler.currency
+                currency = handler.currency
             
-            processed_data = handler.prepare_risk_data()
-            
-            # Calculate Sharpe Ratio
+            # 2. Calculate Metrics
             sharpe_val = calculateSharpeRatio(processed_data)
             vol_val = calculateVolatility(processed_data)
             ret_val = calculateTotalReturn(processed_data)
 
-            # Update Chart
+            # 3. Create Visualisation
             viz = RiskTrendVisualisation(
                 title_input=self.__title_input.value or f"{ticker.upper()} Trend",
                 data_input=processed_data,
-                currency_input=handler.currency
+                currency_input=currency
             )
-            fig = viz.generate_chart()
+            
+            # Generate the base figure
+            fig = viz.generate_chart(chart_mode=self.__chart_mode)
+
+            # ---------------------------------------------------------
+            # CUSTOM OVERRIDES (Fixing Axes and Tooltips)
+            # ---------------------------------------------------------
+            theme = self.__settings.theme
+            
+            # A. Fix Axes Labels (Ensure they are visible)
+            fig.update_layout(
+                xaxis=dict(
+                    title="Date",
+                    showgrid=True,
+                    showticklabels=True,
+                    gridcolor='rgba(128,128,128,0.1)'
+                ),
+                yaxis=dict(
+                    title=f"Price ({currency})",
+                    showgrid=True,
+                    showticklabels=True,
+                    gridcolor='rgba(128,128,128,0.1)'
+                ),
+                hovermode="x unified" # Shows tooltip for all traces at this X-coordinate
+            )
+
+            # B. Fix Tooltips (Formatted as requested)
+            for trace in fig.data:
+                # Common date format for X axis
+                date_fmt = "%{x|%d %b %Y}" # e.g., 01 Jan 2023
+                
+                if trace.type == 'candlestick':
+                    # Candlestick hover template
+                    trace.hovertemplate = (
+                        f"<b>Day={date_fmt}</b><br>"
+                        "Open=%{open:.2f}<br>"
+                        "High=%{high:.2f}<br>"
+                        "Low=%{low:.2f}<br>"
+                        "Close=%{close:.2f}<extra></extra>"
+                    )
+                else:
+                    # Line chart hover template (Price={value})
+                    trace.hovertemplate = (
+                        f"<b>Price=%{{y:.2f}}</b><br>"
+                        f"Day={date_fmt}<extra></extra>"
+                    )
+
+            # ---------------------------------------------------------
 
             self.__chart_container.clear()
             with self.__chart_container:
@@ -179,17 +255,14 @@ class ChartsPage:
             self.__metrics_container.clear()
             with self.__metrics_container.classes('w-full grid grid-cols-1 md:grid-cols-3 gap-4'):
                 
-                # Sharpe Card
                 sharpe_status = "High Performance" if sharpe_val > 1 else "Sub-optimal"
                 self.createMetricCard('Sharpe Ratio', f'{sharpe_val:.2f}', sharpe_status, 
                                      'positive' if sharpe_val > 1 else 'warning')
                 
-                # Volatility Card
                 vol_status = "High Risk" if vol_val > 0.35 else "Stable"
                 self.createMetricCard('Annual Volatility', f'{vol_val:.2%}', vol_status,
                                      'warning' if vol_val > 0.35 else 'positive')
                 
-                # Performance Card
                 ret_status = "Profitable" if ret_val > 0 else "Loss"
                 self.createMetricCard('Total Return', f'{ret_val:.2f}%', ret_status,
                                      'positive' if ret_val > 0 else 'negative')

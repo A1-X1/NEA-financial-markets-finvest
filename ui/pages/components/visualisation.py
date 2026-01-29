@@ -74,17 +74,28 @@ class Visualisation:
 
 @dataclass
 class RiskTrendVisualisation(Visualisation):
-    def generate_chart(self) -> go.Figure:
+    def generate_chart(self, chart_mode: str = 'Line') -> go.Figure:
         theme = globalSettings.theme
-        y_label = f'Price ({self.currency})'
-        
-        fig = px.line(
-            self.data, 
-            x='Date', 
-            y='Close', 
-            title=f"{self.chart_title}",
-            labels={'Close': y_label, 'Date': 'Trading Date'}
-        )
-        
-        fig.update_traces(line_color=theme.accent, line_width=2)
+        fig = go.Figure()
+
+        if chart_mode == 'Candlestick':
+            fig.add_trace(go.Candlestick(
+                x=self.data['Date'],
+                open=self.data['Open'],
+                high=self.data['High'],
+                low=self.data['Low'],
+                close=self.data['Close'],
+                name='Market Data'
+                # Default colors are green (increasing) and red (decreasing)
+            ))
+        else:
+            fig.add_trace(go.Scatter(
+                x=self.data['Date'], 
+                y=self.data['Close'],
+                mode='lines',
+                line=dict(color=theme.accent, width=2),
+                name='Price'
+            ))
+
+        fig.update_layout(title=self.chart_title)
         return self._apply_theme_layout(fig)
