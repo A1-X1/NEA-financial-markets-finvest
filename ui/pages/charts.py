@@ -84,13 +84,13 @@ class ChartsPage:
                 # Timeframe Dropdown 
                 timeframe_options = {
                     '1d': '1 Day', '5d': '5 Days', '1mo': '1 Month', 
-                    '6mo': '6 Months', 'ytd': 'Year to Date', '1y': '1 Year', 'max': 'Max'
+                    '6mo': '6 Months', '1y': 'Year to Date', 'max': 'Max'
                 }
                 # apply 'input-field' class to the dropdown so it picks up the global CSS
                 self.__timeframe_dropdown = ui.select(
                     label='Timeframe', 
                     options=timeframe_options, 
-                    value='ytd'
+                    value='1y'
                 ).classes('w-40 input-field').style(input_style).props(
                     f'outlined dense '
                     f'popup-content-class="input-field" '

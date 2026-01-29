@@ -43,13 +43,13 @@ class DataHandler:
     def fetch_market_data(self):
         ticker = yf.Ticker(self.__ticker_symbol)
         
-        # 1. Fetch Data
+        # Fetch Data
         data = ticker.history(period=self.__period)
         
         if data.empty:
             raise ValueError(f"DataHandler: No data found for ticker '{self.__ticker_symbol}'.")
         
-        # 2. Fetch Currency (using info dict)
+        # Fetch Currency (using info dict)
         try:
             self.__currency = ticker.info.get('currency', 'USD')
             print(f'Currency for generated graph is: {self.__currency}')
