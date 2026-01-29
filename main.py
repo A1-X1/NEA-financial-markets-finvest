@@ -61,4 +61,4 @@ def news():
 
 
 # Runs the main app
-ui.run(title="Finvest Risk Manager", port=8080, native=True)
+ui.run(title="Finvest Risk Manager", port=8080, native=False)
