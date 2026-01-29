@@ -48,9 +48,9 @@ class DataHandler:
         if data.empty:
             raise ValueError(f"DataHandler: No data found for ticker '{self.__ticker_symbol}'.")
         
-        # 2. Fetch Currency (using basic_info for speed)
+        # 2. Fetch Currency (using info dict)
         try:
-            self.__currency = ticker.basic_info.currency
+            self.__currency = ticker.info.get('currency', 'USD')
         except Exception:
             self.__currency = "USD" # Fallback
 
