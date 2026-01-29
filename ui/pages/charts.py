@@ -3,10 +3,10 @@ import plotly.graph_objects as go
 from modules.globalSettings import globalSettings
 from ui.pages.components.dataHandler import DataHandler
 from ui.pages.components.visualisation import RiskTrendVisualisation
+from modules.calculations import calculateSharpeRatio
 
-# FIX PRICE CONVERSIONS
 
-# --- GLOBAL CSS (Advanced Customization for OCR NEA) ---
+# GLOBAL CSS 
 ui.add_css('''
     .input-field .q-field__native, .input-field .q-item__label {
         color: var(--custom-input-color) !important;
@@ -49,6 +49,7 @@ class ChartsPage:
         self.__title_input = None
         self.__timeframe_dropdown = None
         self.__chart_container = None 
+        self.__metrics_container = None
 
     def render(self):
         theme = self.__settings.theme
@@ -114,6 +115,10 @@ class ChartsPage:
             self.__chart_container = ui.element('div').classes('w-full flex-grow rounded-xl shadow-sm border border-gray-100/10 p-4 relative') \
                 .style(f'background-color: {theme.surface}')
             
+            # --- Metrics Area ---
+            # This container sits directly below the chart
+            self.__metrics_container = ui.row().classes('w-full justify-center p-4 mt-2')
+            
             with self.__chart_container:
                 self.__render_empty_chart()
 
@@ -158,6 +163,8 @@ class ChartsPage:
             processed_data = handler.prepare_risk_data()
             currency = handler.currency
 
+            sharpe_val = calculateSharpeRatio(processed_data)
+
             final_title = custom_title if custom_title and len(custom_title.strip()) >= 3 \
                          else f"{ticker.upper()} Price Trend"
 
@@ -171,6 +178,23 @@ class ChartsPage:
             self.__chart_container.clear()
             with self.__chart_container:
                 ui.plotly(fig).classes('w-full h-full')
+
+            # Update Metrics Area
+            # This renders the Sharpe Ratio below the chart as requested
+            self.__metrics_container.clear()
+            with self.__metrics_container:
+                with ui.card().classes('items-center p-4 bg-transparent border-none shadow-none'):
+                    ui.label('Annualised Sharpe Ratio').style(
+                        f'color: {self.__settings.theme.text_secondary}; font-size: 0.9rem'
+                    )
+                    ui.label(f'{sharpe_val}').style(
+                        f'color: {self.__settings.theme.text_primary}; font-size: 2.5rem; font-weight: bold'
+                    )
+                    
+                    # Logic: Qualitative interpretation for Stakeholders
+                    color = 'positive' if sharpe_val > 1 else 'warning' if sharpe_val > 0 else 'negative'
+                    label = 'High Risk-Adjusted Return' if sharpe_val > 1 else 'Sub-optimal'
+                    ui.badge(label, color=color).props('outline')
 
         except Exception as e:
             ui.notify(f"Error: {str(e)}", type='negative')
