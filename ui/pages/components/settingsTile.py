@@ -12,12 +12,11 @@ class SettingsTile(ui.row):
         self.__icon_bg_colour = icon_bg_colour
         self.__icon_colour = icon_colour
         
-        # self.classes('w-full items-center justify-between py-2 px-4 bg-transparent')
         self.classes('w-[400px] justify-between py-2 px-0 bg-transparent')
         
         with self:
             with ui.row().classes('items-center gap-4'):
-                # Explicitly creating the container and using a 'with' block to ensure nesting
+                # explicitly creating the container
                 self.__icon_container = ui.element('div').style(
                     f'background-color: {self.__icon_bg_colour}; '
                     'width: 32px; height: 32px; '
@@ -32,20 +31,22 @@ class SettingsTile(ui.row):
                 
                 ui.label(self.__label).classes('text-md font-medium').style(f'color: {globalSettings.theme.text_primary}')
 
+            # the switch component itself
             self.switch = ui.switch(value=initial_value, on_change=on_change).props('keep-color color=green dense').style(f'margin-top: 6px;')
 
+    # getters and setters
     @property
-    def icon_bg_color(self) -> str:
-        return self.__icon_bg_color
+    def icon_bg_colour(self) -> str:
+        return self.__icon_bg_colour
 
-    @icon_bg_color.setter
-    def icon_bg_color(self, value: str):
-        self.__icon_bg_color = value
+    @icon_bg_colour.setter
+    def icon_bg_colour(self, value: str):
+        self.__icon_bg_colour = value
 
     @property
-    def icon_color(self) -> str:
-        return self.__icon_color
+    def icon_colour(self) -> str:
+        return self.__icon_colour
 
-    @icon_color.setter
-    def icon_color(self, value: str):
-        self.__icon_color = value
+    @icon_colour.setter
+    def icon_colour(self, value: str):
+        self.__icon_colour = value
