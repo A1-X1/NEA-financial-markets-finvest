@@ -6,14 +6,11 @@ from currency_codes import Currency, CurrencyNotFoundError, get_currency_by_code
 
 @dataclass
 class GlobalSettings:
-
     __instance = None
         
     def __new__(cls):
-        """
-        Enforces a single instance of the class across the application lifecycle.
-        Logic: Returns existing instance if present, otherwise creates and hydrates it.
-        """
+
+        # if no instance exists, create one and initialize attributes ensuring only one instance is ever created
         if cls.__instance is None:
             cls.__instance = super(GlobalSettings, cls).__new__(cls)
             cls.__instance.__initialize_attributes()
@@ -21,24 +18,24 @@ class GlobalSettings:
         return cls.__instance
     
     def __initialize_attributes(self):
-        """
-        Sets default values for private attributes upon initial creation.
-        Logic: Required because @dataclass default values can conflict with Singleton __new__.
-        """
+
+        # instance attributes
         self.__theme : ColourScheme = Theme
         self.__currency : Currency = get_currency_by_code('USD')
         self.__currentPage : str = None
         self.__fontWeight : int = 500
         self.__currencySymbol : str = '$'
         
-        # Switches for settings page
+        # switches data for settings page
         self.__darkMode : bool = False
         self.__accessibilityMode : bool = False
 
+    # property decorator allows us to use getter methods like normal functions
     @property
     def currencySymbol(self) -> str:
         return self.__currencySymbol
     
+    # setter decorator allows us to use setter methods like normal functions
     @currencySymbol.setter
     def currencySymbol(self, value: str):
         self.__currencySymbol = value
@@ -77,7 +74,7 @@ class GlobalSettings:
         if isinstance(value, ColourScheme):
             self.__theme = value
         else:
-            # Type checking ensures the UI doesn't break at runtime
+            # type checking ensures there won't be runtime errors
             raise TypeError("Theme must be an instance of ColourScheme")
         
     @property
@@ -101,9 +98,13 @@ class GlobalSettings:
             cursor.execute("SELECT data FROM GlobalSettingsTable WHERE id = 1")
             row = cursor.fetchone()
             if row:
-                # Reconstruct the singleton state from the BLOB
+                # reconstruct the singleton state from the blob from database
                 saved_settings : GlobalSettings = pickle.loads(row[0])
-                instance : GlobalSettings = self() # Get the singleton instance
+
+                # get the singleton instance
+                instance : GlobalSettings = self() 
+
+                # update the singleton instance with the loaded settings
                 instance.theme = saved_settings.theme
                 instance.darkMode = saved_settings.darkMode
                 instance.currency = saved_settings.currency
