@@ -6,20 +6,24 @@ from modules.globalSettings import globalSettings
 
 @dataclass
 class Visualisation:
+    # defining public attributes
     title_input: str
     data_input: pd.DataFrame
     currency_input: str
     
+    # defining private attributes
     __chart_title: str = field(init=False, repr=False)
     __data: pd.DataFrame = field(init=False, repr=False)
     __currency: str = field(init=False, repr=False)
 
+    # constructor/initialiser
     def __post_init__(self):
         # Using setters to ensure validation logic is triggered
         self.chart_title = self.title_input
         self.data = self.data_input
         self.currency = self.currency_input
 
+    # getters and setters
     @property
     def chart_title(self) -> str:
         return self.__chart_title
@@ -72,12 +76,14 @@ class Visualisation:
         )
         return fig
 
+
 @dataclass
 class RiskTrendVisualisation(Visualisation):
     def generate_chart(self, chart_mode: str = 'Line') -> go.Figure:
         theme = globalSettings.theme
         fig = go.Figure()
 
+        # add candlestick trace if mode is candlestick
         if chart_mode == 'Candlestick':
             fig.add_trace(go.Candlestick(
                 x=self.data['Date'],
@@ -88,6 +94,8 @@ class RiskTrendVisualisation(Visualisation):
                 name='Market Data'
                 # Default colors are green (increasing) and red (decreasing)
             ))
+        
+        # add line trace if mode is line
         else:
             fig.add_trace(go.Scatter(
                 x=self.data['Date'], 
@@ -97,5 +105,6 @@ class RiskTrendVisualisation(Visualisation):
                 name='Price'
             ))
 
+        # update layout
         fig.update_layout(title=self.chart_title)
         return self._apply_theme_layout(fig)
