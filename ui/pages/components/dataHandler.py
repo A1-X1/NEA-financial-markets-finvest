@@ -44,6 +44,8 @@ class DataHandler:
 
     # fetches the market data
     def fetch_market_data(self):
+        # prints the ticker symbol and period
+        print(f'Fetching data for {self.__ticker_symbol} with period {self.__period}')
         ticker = yf.Ticker(self.__ticker_symbol)
         
         # fetch data
@@ -63,6 +65,10 @@ class DataHandler:
         # store raw data
         self.__raw_data = data.reset_index()
         return self.__raw_data
+
+        
+
+        
 
     # prepares the data for risk analysis
     def prepare_risk_data(self):
