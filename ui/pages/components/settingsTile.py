@@ -5,6 +5,7 @@ from modules.globalSettings import globalSettings, GlobalSettings
 
 @dataclass
 class SettingsTile(ui.row):
+    
     def __init__(self, label: str, icon: str, icon_bg_colour: str, icon_colour: str, initial_value: bool, on_change: Callable):
         super().__init__()
         self.__label = label
@@ -17,7 +18,7 @@ class SettingsTile(ui.row):
         
         with self:
             with ui.row().classes('items-center gap-4'):
-                # Explicitly creating the container and using a 'with' block to ensure nesting
+                # explicitly creating the container
                 self.__icon_container = ui.element('div').style(
                     f'background-color: {self.__icon_bg_colour}; '
                     'width: 32px; height: 32px; '
@@ -26,14 +27,16 @@ class SettingsTile(ui.row):
                 )
                 
                 with self.__icon_container:
-                    # Setting the icon color via .style() ensures it overrides container defaults
+                    # creating the icon and sets its color
                     ui.icon(self.__icon, color=self.__icon_colour).classes('text-lg')
 
-                
+                # creating the label of the settings tile
                 ui.label(self.__label).classes('text-md font-medium').style(f'color: {globalSettings.theme.text_primary}')
 
+            # creating the switch of the settings tile
             self.switch = ui.switch(value=initial_value, on_change=on_change).props('keep-color color=green dense').style(f'margin-top: 6px;')
 
+    # getters and setters
     @property
     def icon_bg_color(self) -> str:
         return self.__icon_bg_color
