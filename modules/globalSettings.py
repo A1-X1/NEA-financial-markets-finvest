@@ -112,4 +112,5 @@ class GlobalSettings:
         except Exception as e:
             print(f"Error loading settings: {e}")
 
+# create the singleton instance
 globalSettings = GlobalSettings()

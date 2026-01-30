@@ -10,28 +10,27 @@ class SideButton(ui.button):
         self.__icon_name = icon
         self.__external_callback = callbackFunction
 
+        # initialize the button parent class attributes
         super().__init__(color=None, on_click=self.__handle_click)
 
-
-        self.update()
         self.applyStyles()
 
         with self:
             with ui.row().classes('items-center justify-start gap-4 w-full no-wrap px-4'):
                 ui.icon(icon).classes('text-2xl')
-                # The label will be hidden by the drawer's 'mini' state logic
+                # the label will be hidden by the drawer's mini state logic if I add later
                 ui.label(buttonLabel).classes('truncate')
 
     def __handle_click(self) -> None:
-        # Trigger internal logic
+        # trigger internal logic
         self.toggle()
         self.applyStyles()
         
-        # Trigger the external page load logic
+        # trigger the external page load logic
         if self.__external_callback:
             self.__external_callback()
 
-    # the colour isnt getting applied
+    # the colour getting applied
     def applyStyles(self):
         Theme = globalSettings.theme
 
@@ -43,18 +42,12 @@ class SideButton(ui.button):
 
         self.style(f'width: 85%; color: {foreground_colour} ; background: {background_colour};')
 
-    
     def toggle(self) -> None: 
-        """Toggle the button state.""" 
         self.__isActive = not self.__isActive 
-        self.update()
-
-    def toggle_active(self, state: bool) -> None:
-        # Changes the internal state and triggers a style refresh
-        self.__isActive = state
         self.applyStyles()
 
-    def update(self) -> None:
-        super().update()
-
+    def toggle_active(self, state: bool) -> None:
+        # changes the internal state and triggers a style refresh
+        self.__isActive = state
+        self.applyStyles()
     

@@ -20,6 +20,7 @@ class ColourScheme:
         self.__sb_inactive_bg = sb_inact_bg
         self.__sb_inactive_fg = sb_inact_fg
 
+    # property decorator allows us to use getter methods like normal functions
     @property
     def background(self) -> str:
         return self.__background
@@ -76,6 +77,7 @@ class ColourScheme:
     def sb_inactive_fg(self) -> str:
         return self.__sb_inactive_fg
     
+    # @.setter decorator allows us to use setter methods like normal functions
     @background.setter
     def background(self, value: str):
         self.__background = value
