@@ -6,6 +6,7 @@ from currency_codes import get_currency_by_code, Currency, CurrencyNotFoundError
 from currency_symbols import CurrencySymbols
 import re
 
+# force custom styling on the input field
 ui.add_css('''
     .input-field .q-field__native {
         color: var(--custom-input-color) !important;
@@ -22,10 +23,9 @@ ui.add_css('''
     }
 ''', shared=True)
 
-print(globalSettings.theme.text_primary)
-
 @dataclass
 class SettingsInput(ui.row):
+    # attributes initialised here
     def __init__(self, label: str, icon: str, icon_bg_color: str, icon_color: str, initial_value: str, on_save: Callable):
         super().__init__()
         self.__label = label
@@ -36,6 +36,7 @@ class SettingsInput(ui.row):
         
         self.classes('w-[400px] py-2 px-0 bg-transparent items-center justify-between')
 
+        # use globalSettings to get the current theme
         current_text_color = globalSettings.theme.text_primary
         
         with self:
@@ -55,10 +56,17 @@ class SettingsInput(ui.row):
             with ui.row().classes('items-center gap-2'):
                 self.__input_field = ui.input(value=initial_value, on_change=self.__force_uppercase).props('outlined dense').style(
                 f'width: 150px; '
-                f'color: {current_text_color}; '           # Sets the text color inside
-                f'--q-primary: {current_text_color}; '     # Sets the Quasar primary (active border)
+                # sets the text color inside
+                f'color: {current_text_color}; '           
+
+                # sets the Quasar primary (active border)
+                f'--q-primary: {current_text_color}; '     
+
+                # sets the custom input color variable used before
                 f'--custom-input-color: {current_text_color}; '
-                f'border-color: {current_text_color};'     # Sets the base border color
+
+                # sets the base border color
+                f'border-color: {current_text_color};'
             ).classes('input-field')
                 
                 self.__save_button = ui.button('Save', on_click=self.__handle_manual_save).style(
@@ -67,10 +75,12 @@ class SettingsInput(ui.row):
                     
                 ).props(f':ripple="false" unelevated')
 
+    # forces the input to be uppercase
     def __force_uppercase(self):
         if self.__input_field.value:
             self.__input_field.value = self.__input_field.value.upper()
 
+    # shows a notification when the user inputs an invalid currency code
     def __show_validation_error(self, message : str):
         ui.notify(
             f'Validation Error: {message}',
@@ -80,15 +90,7 @@ class SettingsInput(ui.row):
             close_button=True
         )
 
-    # def __show_currency_saved(self):
-    #     ui.notify(
-    #         f'Settings Saved',
-    #         position='top',
-    #         type='positive',
-    #         icon='settings',
-    #         close_button=True
-    #     )
-
+    # shows a specific notification when the user inputs an invalid currency code
     def __show_validation_error_nonexistant_currency(self):
         ui.notify(
             f'Validation Error: {self.__input_field.value} is not a valid currency code.',
@@ -98,6 +100,8 @@ class SettingsInput(ui.row):
             close_button=True
         )
 
+        
+    # has some validation for what users input into the box
     def __handle_manual_save(self):
         currencyInput = self.__input_field.value
 
@@ -151,5 +155,4 @@ class SettingsInput(ui.row):
 
     @icon_bg_color.setter
     def icon_bg_color(self, value: str):
-        # Validation: Hex code check could be added here
         self.__icon_bg_color = value
