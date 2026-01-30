@@ -13,12 +13,13 @@ class SettingsPage:
         self.__settings = globalSettings
         self.__currencyInput : SettingsInput = None
 
-    def placeholder():
-        pass
-
+    # method for storing new settings
     def storeNewSettings(self, newSettings : GlobalSettings):
 
+        # serialise the settings object
         binaryData = pickle.dumps(newSettings)
+
+        # create table if it doesn't exist
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS GlobalSettingsTable (
                 id INTEGER PRIMARY KEY CHECK (id = 1), 
@@ -26,16 +27,20 @@ class SettingsPage:
             )
         """)
 
+        # insert or replace the settings object
         cursor.execute("""
             INSERT OR REPLACE INTO GlobalSettingsTable (id, data) 
             VALUES (1, ?)
         """, (binaryData,))
 
+        # commit the transaction
         connection.commit()
 
+    # method for toggling dark mode
     def toggleDarkMode(self):
         settings = globalSettings
 
+        # toggle dark mode (boolean inversion logi)
         if (settings.darkMode == True):
             settings.theme = Theme
             settings.darkMode = False
@@ -45,12 +50,14 @@ class SettingsPage:
 
         self.storeNewSettings(settings)
 
-        # UI CALLBACK: Force Refresh
+        # ui callback force refresh
         ui.run_javascript('window.location.reload()')
 
+    # method for toggling accessibility mode
     def toggleAccessibilityMode(self):
         settings = globalSettings
 
+        # toggle accessibility mode (boolean inversion logic)
         if (settings.accessibilityMode == True):
             settings.fontWeight = 500
             settings.accessibilityMode = False
@@ -60,14 +67,17 @@ class SettingsPage:
 
         self.storeNewSettings(settings)
 
-        # UI CALLBACK: Force Refresh
+        # ui callback: force refresh
         ui.run_javascript('window.location.reload()')
 
+    # method for updating currency
     def updateCurrency(self, currency : str):
         settings = globalSettings
         
+        # get currency object from code
         newCurrency = get_currency_by_code(currency)
 
+        # if currency is invalid, exit method
         if (newCurrency == None):
             return
         else:
@@ -76,9 +86,10 @@ class SettingsPage:
 
         self.storeNewSettings(settings)
 
-        # UI CALLBACK: Force Refresh
+        # ui callback force refresh
         ui.run_javascript('window.location.reload()')
 
+    # method for rendering the settings page
     def render(self):
         colours = self.__settings.theme
         

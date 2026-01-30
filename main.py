@@ -8,9 +8,10 @@ from ui.pages.news import NewsPage
 from ui.pages.portfolio import PortfolioPage
 from ui.pages.settings import SettingsPage
 
-# Instantiate the layout renderer
+# instantiate the layout renderer
 layout_renderer = DashboardLayout()
 
+# routing for page (/ is home page)
 @ui.page('/')
 def index():
     layout_renderer.render(active_route='home')
@@ -19,6 +20,7 @@ def index():
         page = HomePage()
         page.render()
 
+# routing for settingspage
 @ui.page('/settings')
 def settings():
     layout_renderer.render(active_route='settings')
@@ -27,6 +29,7 @@ def settings():
         page = SettingsPage()
         page.render()
 
+# routing for charts page
 @ui.page('/charts')
 def charts():
     layout_renderer.render(active_route='charts')
@@ -35,6 +38,7 @@ def charts():
         page = ChartsPage()
         page.render()
 
+# routing for portfolio page
 @ui.page('/portfolio')
 def portfolio():
     layout_renderer.render(active_route='portfolio')
@@ -43,6 +47,7 @@ def portfolio():
         page = PortfolioPage()
         page.render()
 
+# routing for simulation page
 @ui.page('/simulation')
 def simulation():
     layout_renderer.render(active_route='simulation')
@@ -51,6 +56,7 @@ def simulation():
         page = SimulationPage()
         page.render()
 
+# routing for news page
 @ui.page('/news')
 def news():
     layout_renderer.render(active_route='news')
@@ -60,5 +66,5 @@ def news():
         page.render()
 
 
-# Runs the main app
+# runs the main app
 ui.run(title="Finvest Risk Manager", port=8080, native=False)
