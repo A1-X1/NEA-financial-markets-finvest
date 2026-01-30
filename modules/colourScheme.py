@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ColourScheme:
+    # intialises all the private attributes
     def __init__(self, bg: str, surface: str, accent: str, btn_bg: str, btn_fg: str, 
                  text_p: str, text_s: str, text_ph: str, pos: str, neg: str,
                  sb_act_bg: str, sb_act_fg: str, sb_inact_bg: str, sb_inact_fg: str):
@@ -20,6 +21,7 @@ class ColourScheme:
         self.__sb_inactive_bg = sb_inact_bg
         self.__sb_inactive_fg = sb_inact_fg
 
+    # getters and setters
     @property
     def background(self) -> str:
         return self.__background
@@ -132,7 +134,7 @@ class ColourScheme:
     def sb_inactive_fg(self, value: str):
         self.__sb_inactive_fg = value
     
-
+# creates the themes as objects in global scope
 Theme = ColourScheme(
             bg='#FFFFFF',
             surface='#F8F8FA',

@@ -6,14 +6,11 @@ from currency_codes import Currency, CurrencyNotFoundError, get_currency_by_code
 
 @dataclass
 class GlobalSettings:
-
+    # stores the singleton instance
     __instance = None
         
     def __new__(cls):
-        """
-        Enforces a single instance of the class across the application lifecycle.
-        Logic: Returns existing instance if present, otherwise creates and hydrates it.
-        """
+        # constructor for that ensures object is only created once (singleton)
         if cls.__instance is None:
             cls.__instance = super(GlobalSettings, cls).__new__(cls)
             cls.__instance.__initialize_attributes()
@@ -21,10 +18,7 @@ class GlobalSettings:
         return cls.__instance
     
     def __initialize_attributes(self):
-        """
-        Sets default values for private attributes upon initial creation.
-        Logic: Required because @dataclass default values can conflict with Singleton __new__.
-        """
+        # initialises the private attributes
         self.__theme : ColourScheme = Theme
         self.__currency : Currency = get_currency_by_code('USD')
         self.__currentPage : str = None
@@ -35,6 +29,7 @@ class GlobalSettings:
         self.__darkMode : bool = False
         self.__accessibilityMode : bool = False
 
+    # getters and setters
     @property
     def currencySymbol(self) -> str:
         return self.__currencySymbol
@@ -96,6 +91,7 @@ class GlobalSettings:
     def currency(self, value: Currency):
         self.__currency = value
 
+    # loads the settings from the database if it exists
     def load_from_db(self):
         try:
             cursor.execute("SELECT data FROM GlobalSettingsTable WHERE id = 1")
@@ -111,4 +107,5 @@ class GlobalSettings:
         except Exception as e:
             print(f"Error loading settings: {e}")
 
+# creates the singleton instance
 globalSettings = GlobalSettings()

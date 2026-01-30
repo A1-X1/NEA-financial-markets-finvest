@@ -4,12 +4,14 @@ from dataclasses import dataclass
 
 @dataclass
 class DataHandler:
+    # stores the private attributes for ticker symbol, period, raw data, processed data and currency
     __ticker_symbol: str = "AAPL"
     __period: str = "1mo"
     __raw_data: pd.DataFrame = None
     __processed_data: pd.DataFrame = None
     __currency: str = "USD"  # Default fallback
 
+    # getters and setters
     @property
     def ticker_symbol(self) -> str:
         return self.__ticker_symbol
@@ -40,38 +42,41 @@ class DataHandler:
     def raw_data(self) -> pd.DataFrame:
         return self.__raw_data
 
+    # fetches the market data
     def fetch_market_data(self):
         ticker = yf.Ticker(self.__ticker_symbol)
         
-        # Fetch Data
+        # fetch data
         data = ticker.history(period=self.__period)
         
         if data.empty:
             raise ValueError(f"DataHandler: No data found for ticker '{self.__ticker_symbol}'.")
         
-        # Fetch Currency (using info dict)
+        # fetch currency (using info dict)
         try:
             self.__currency = ticker.info.get('currency', 'USD')
             print(f'Currency for generated graph is: {self.__currency}')
         except Exception:
-            self.__currency = "USD" # Fallback
+            # incase of error use usd as default
+            self.__currency = "USD" 
 
+        # store raw data
         self.__raw_data = data.reset_index()
         return self.__raw_data
 
+    # prepares the data for risk analysis
     def prepare_risk_data(self):
         if self.__raw_data is None:
             raise ValueError("DataHandler: Cannot prepare data before fetching.")
         
         df = self.__raw_data.copy()
         
-        # Calculate returns
+        # calculate returns
         df['Daily_Return'] = df['Close'].pct_change()
         df['Volatility'] = df['Daily_Return'].rolling(window=5).std()
         
         df = df.dropna()
 
-        # Fix for JSON Serialization Error (Timestamp -> String)
         if 'Date' in df.columns:
             df['Date'] = df['Date'].astype(str)
         
