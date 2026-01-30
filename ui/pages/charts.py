@@ -7,9 +7,8 @@ from modules.calculations import calculateSharpeRatio, calculateVolatility, calc
 from modules.database.database import cursor, connection
 import pickle
 
-# --- DATA CONTAINER FOR PICKLING ---
+# data container for easy serialisation to cache page to save data locally when changing pages
 class ChartsPageCache:
-    """Simple container to store the state of the Charts Page."""
     def __init__(self, ticker, timeframe, title, chart_mode, data, currency, metrics):
         self.ticker = ticker
         self.timeframe = timeframe
@@ -19,7 +18,7 @@ class ChartsPageCache:
         self.currency = currency
         self.metrics = metrics 
 
-# --- GLOBAL CSS ---
+# global css for charts page
 ui.add_css('''
     .input-field .q-field__native, .input-field .q-item__label {
         color: var(--custom-input-color) !important;
@@ -53,7 +52,9 @@ ui.add_css('''
     }
 ''', shared=True)
 
+# charts page class
 class ChartsPage:
+    # constructor/initialiser
     def __init__(self):
         self.__settings = globalSettings
         self.__ticker_input = None 
@@ -62,36 +63,42 @@ class ChartsPage:
         self.__chart_container = None 
         self.__metrics_container = None
         
-        # Initialize default state variables
+        # initialises default state variables
         self._current_processed_data = None
         self._current_currency = "USD"
         self.__chart_mode = 'Line'
         self._current_metrics = {}
         
-        # Load state (overwrites defaults if successful)
+        # load state (overwrites defaults if successful)
         self.__load_state()
 
+    # method for loading state from cache
     def __load_state(self):
-        """Loads the pickled state from SQLite if it exists."""
-        # 1. SET DEFAULTS FIRST (Prevents AttributeError if DB fails)
+
+        # set defaults first (prevents AttributeError if DB lookup fails)
         self.__saved_ticker = 'AAPL'
         self.__saved_timeframe = '1y'
         self.__saved_title = ''
         self.__has_saved_state = False
 
         try:
-            # Check if table exists to avoid loud SQL errors on first run
+            # check if table exists to avoid SQL errors on first run
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ChartsPageCacheTable'")
             if not cursor.fetchone():
-                return # Table doesn't exist, stick with defaults
+                # table doesn't exist, stick with defaults
+                return 
 
+            # load state from cache
             cursor.execute("SELECT data FROM ChartsPageCacheTable WHERE id = 1")
+
+            # get row of charts page data
             row = cursor.fetchone()
             
             if row:
+                # load charts page data from cache
                 cached_obj : ChartsPageCache = pickle.loads(row[0])
                 
-                # Restore state variables
+                # restore state variables
                 self.__saved_ticker = cached_obj.ticker
                 self.__saved_timeframe = cached_obj.timeframe
                 self.__saved_title = cached_obj.title
@@ -104,12 +111,12 @@ class ChartsPage:
                 
         except Exception as e:
             print(f"Error loading chart state: {e}")
-            # Defaults are already set above, so we are safe here.
+            # defaults are already set above, so safe here
 
     def __save_state(self):
         """Saves the current inputs and data to SQLite using pickle."""
         try:
-            # Create the data container
+            # create the data container
             cache_obj = ChartsPageCache(
                 ticker=self.__ticker_input.value,
                 timeframe=self.__timeframe_dropdown.value,
@@ -119,10 +126,11 @@ class ChartsPage:
                 currency=self._current_currency,
                 metrics=self._current_metrics
             )
-            
+
+            # serialise data container
             binary_data = pickle.dumps(cache_obj)
 
-            # Ensure table exists
+            # ensure table exists
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS ChartsPageCacheTable (
                     id INTEGER PRIMARY KEY CHECK (id = 1), 
@@ -130,7 +138,7 @@ class ChartsPage:
                 )
             """)
 
-            # Upsert logic (Insert or Replace)
+            # upsert logic (insert or replace)
             cursor.execute("""
                 INSERT OR REPLACE INTO ChartsPageCacheTable (id, data) 
                 VALUES (1, ?)
@@ -141,48 +149,56 @@ class ChartsPage:
         except Exception as e:
             ui.notify(f"Failed to save state: {str(e)}", color='negative')
 
+    # method for toggling the chart type
     def __toggle_chart_type(self):
         self.__chart_mode = 'Candlestick' if self.__chart_mode == 'Line' else 'Line'
         
-        # Update button icon
-        if hasattr(self, '_ChartsPage__toggle_btn'): # Safety check
+        # update button icon with safety check
+        if hasattr(self, '_ChartsPage__toggle_btn'):
             self.__toggle_btn.props(f'icon={"candlestick_chart" if self.__chart_mode == "Candlestick" else "show_chart"}')
         
+        # update chart if data is available
         if self._current_processed_data is not None:
             self.__generate_chart(use_cached=True)
             self.__save_state()
 
+    # method for rendering the page
     def render(self):
+        # get the settings from singleton object
         theme = self.__settings.theme
 
-        # Consistent Variables for CSS
+        # consistent variables for CSS
         input_style = (
             f'--custom-input-color: {theme.text_primary}; '
             f'--custom-placeholder-color: {theme.text_placeholder}; '
             f'--custom-accent-soft: {theme.sb_active_bg}; '
             f'--q-primary: {theme.accent};'
         )
-
+        
         dropdown_popup_style = (
             f'background-color: {theme.surface} !important; '
             f'color: {theme.text_primary} !important;'
         )
         
+
         btn_style = f'background-color: {theme.sb_active_bg} !important; color: {theme.sb_active_fg} !important;'
 
+        # render the page
         with ui.element('div').classes('w-full h-full flex flex-col p-8 gap-6'):
             
+            # title text
             ui.label('Chart Analysis').style(f'color: {theme.text_primary}; font-size: 200%; font-weight: bold')
 
+            # row of inputs
             with ui.row().classes('w-full items-end gap-4'):
                 
-                # Ticker Input
+                # ticker input box
                 self.__ticker_input = ui.input(label='Ticker Symbol', value=self.__saved_ticker) \
                     .classes('w-32 input-field') \
                     .props('outlined dense uppercase') \
                     .style(input_style)
                 
-                # Timeframe Dropdown 
+                # timeframe dropdown
                 timeframe_options = {
                     '1mo': '1 Month', 
                     '6mo': '6 Months', '1y': 'Year to Date', 'max': 'Max'
@@ -198,53 +214,63 @@ class ChartsPage:
                     f'input-style="color: {theme.text_primary}"'
                 )
 
-                # Optional Title Input
+                # optional title input box
                 self.__title_input = ui.input(label='Custom Title (Optional)', value=self.__saved_title) \
                     .classes('w-64 input-field') \
                     .props('outlined dense') \
                     .style(input_style)
                 
+                # row of buttons
                 with ui.row().classes('gap-2'):
+
+                    # generate chart button
                     ui.button('Generate Chart', on_click=lambda: self.__generate_chart(use_cached=False)) \
                         .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
                     
+                    # add to home button
                     ui.button('Add to Home', on_click=lambda: ui.notify('Widget Configuration Saved', color='positive')) \
                         .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
                     
+                    # toggle chart type button  
                     icon_name = 'candlestick_chart' if self.__chart_mode == "Candlestick" else "show_chart"
                     self.__toggle_btn = ui.button(icon=icon_name, on_click=self.__toggle_chart_type) \
                         .style(btn_style).props('flat unelevated')
                     
+                    # clear chart button
                     ui.button('Clear', on_click=self.__clear_chart) \
                         .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated icon=delete')
 
+            # chart container
             self.__chart_container = ui.element('div').classes('w-full flex-grow rounded-xl shadow-sm border border-gray-100/10 p-4 relative') \
                 .style(f'background-color: {theme.surface}')
             
+            # metrics container
             self.__metrics_container = ui.row().classes('w-full justify-center p-4 mt-2')
             
             with self.__chart_container:
+                # render chart
                 if self.__has_saved_state and self._current_processed_data is not None:
                     self.__generate_chart(use_cached=True)
                 else:
                     self.__render_empty_chart()
 
+    # method for clearing the chart and deleting from DB
     def __clear_chart(self):
-        """Clears the chart, resets state, and deletes record from DB."""
         try:
-            # 1. Delete from DB
+            # delete from db
             cursor.execute("DELETE FROM ChartsPageCacheTable WHERE id = 1")
             connection.commit()
             
-            # 2. Reset Internal State
+            # reset internal state
             self._current_processed_data = None
             self._current_metrics = {}
-            self.__saved_ticker = 'AAPL' # Reset to default or empty
+            # reset to default
+            self.__saved_ticker = 'AAPL' 
             self.__saved_timeframe = '1y'
             self.__saved_title = ''
             self.__has_saved_state = False
             
-            # 3. Reset Inputs
+            # reset inputs
             if self.__ticker_input:
                 self.__ticker_input.value = self.__saved_ticker
             if self.__title_input:
@@ -252,16 +278,19 @@ class ChartsPage:
             if self.__timeframe_dropdown:
                 self.__timeframe_dropdown.value = self.__saved_timeframe
                 
-            # 4. Clear/Reset UI
+            # clear/ reset UI
             self.__metrics_container.clear()
             self.__render_empty_chart()
             
+            # notify user
             ui.notify('Chart cleared and saved state deleted.', color='positive')
             
+        # handle errors gracefully
         except Exception as e:
             ui.notify(f"Error clearing chart: {str(e)}", color='negative')
             print(f"Error clearing chart: {e}")
 
+    # method for rendering an empty chart (default state)
     def __render_empty_chart(self):
         theme = self.__settings.theme
         layout = go.Layout(
@@ -282,15 +311,18 @@ class ChartsPage:
         with self.__chart_container:
             ui.plotly(fig).classes('w-full h-full')
 
+    # method for generating a chart
     def __generate_chart(self, use_cached=False):
         ticker = self.__ticker_input.value
         timeframe = self.__timeframe_dropdown.value
         
+        # validate input
         if not ticker:
             ui.notify('Please enter a ticker symbol.', type='warning')
             return
 
         try:
+            # check if we can use cached data
             if use_cached and self._current_processed_data is not None:
                 processed_data = self._current_processed_data
                 currency = self._current_currency
@@ -323,15 +355,17 @@ class ChartsPage:
                     'ret': ret_val
                 }
             
+            # create visualisation object
             viz = RiskTrendVisualisation(
                 title_input=self.__title_input.value or f"{ticker.upper()} Trend",
                 data_input=processed_data,
                 currency_input=currency
             )
             
+            # generate chart
             fig = viz.generate_chart(chart_mode=self.__chart_mode)
-
-            theme = self.__settings.theme
+            
+            # update layout
             fig.update_layout(
                 xaxis=dict(
                     title="Date",
@@ -348,6 +382,7 @@ class ChartsPage:
                 hovermode="x unified"
             )
 
+            # update hover templates
             for trace in fig.data:
                 date_fmt = "%{x|%d %b %Y}"
                 if trace.type == 'candlestick':
@@ -364,10 +399,12 @@ class ChartsPage:
                         f"Day={date_fmt}<extra></extra>"
                     )
 
+            # update UI
             self.__chart_container.clear()
             with self.__chart_container:
                 ui.plotly(fig).classes('w-full h-full')
 
+            # update metrics
             self.__metrics_container.clear()
             with self.__metrics_container.classes('w-full grid grid-cols-1 md:grid-cols-3 gap-4'):
                 
@@ -383,12 +420,15 @@ class ChartsPage:
                 self.createMetricCard('Total Return', f'{ret_val:.2f}%', ret_status,
                                      'positive' if ret_val > 0 else 'negative')
             
+            # save state in cache
             self.__save_state()
 
+        # handle errors properly
         except Exception as e:
             ui.notify(f"Error: {str(e)}", type='negative')
             print(e)
         
+    # method for creating metric cards at bottom of page
     def createMetricCard(self, title_text, value_text, status_label, badge_color):
         theme = self.__settings.theme
         with ui.card().classes('items-center p-6 bg-transparent border border-gray-100/10 shadow-none'):
