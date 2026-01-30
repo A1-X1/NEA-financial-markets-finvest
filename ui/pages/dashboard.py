@@ -2,28 +2,27 @@ from nicegui import ui, app
 from modules.globalSettings import globalSettings
 from ui.pages.components.sideButton import SideButton
 
-
-
-
+# class that renders the dashboard layout
 class DashboardLayout:
     def __init__(self):
         self.__settings = globalSettings
 
+    # exit sequence for when user tries to exit via the button
     def exit_sequence(self):
         with ui.dialog() as dialog, ui.card().classes('p-6'):
             ui.label('Are you sure you want to exit?').classes('text-lg font-bold')
             ui.label('Unsaved simulation data may be lost.').classes('text-sm text-gray-500')
             
             with ui.row().classes('w-full justify-end mt-4'):
-                # Close only the dialog
+                # close only the dialog
                 ui.button('Cancel', on_click=dialog.close).props('flat color=positive')
                 
-                # Close the entire application
+                # close the entire application
                 ui.button('Exit', on_click=app.shutdown).props('unelevated color=negative')
         
         dialog.open()
         
-
+    # renders the dashboard layout to screen
     def render(self, active_route: str):
         colours = self.__settings.theme
         weight = self.__settings.fontWeight
@@ -39,8 +38,6 @@ class DashboardLayout:
                 .q-item__label, .q-btn__content, .nicegui-label {{
                     font-weight: {weight} !important;
                 }}
-                
-                /* Ensure background colors still update via query */
 
                 body {{ background-color: {colours.background} !important; }}
                 .my-sidebar {{ background-color: {colours.surface} !important; }}
@@ -52,25 +49,25 @@ class DashboardLayout:
             </style>
         ''')
 
-        # Render Sidebar
+        # render sidebar
         sidebar_style = f'background-color: {colours.surface}; padding: 0; padding-bottom: 20px;'
         
         with ui.left_drawer().style(sidebar_style).classes('flex flex-col items-center gap-0'):
 
             with ui.row().classes('w-full relative-position items-center justify-center p-5'):
                 
-                # The Exit Button
+                # exit button
                 ui.button(icon='logout', on_click=self.exit_sequence) \
                     .props('flat round dense :ripple="false"') \
                     .style(f'color: {colours.text_primary} !important;') \
                     .classes('absolute-left q-ml-md h-full no-hover') 
 
-                # The Title
+                # title text
                 ui.label('FINVEST') \
                     .style(f'color: {colours.text_primary}; font-size: 24px; font-weight: bold;') \
                     .classes('ignore-bold')
 
-            # Navigation Logic
+            # navigation buttons and their function callbacks
             SideButton(
                 buttonLabel='Home', 
                 icon='home', 

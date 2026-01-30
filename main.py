@@ -66,5 +66,5 @@ def news():
         page.render()
 
 
-# Runs the main app (native param just tells the app to run in a native process rather than in browser)
+# runs the main app (native param just tells the app to run in a native process rather than in browser)
 ui.run(title="Finvest Risk Manager", port=8080, native=True)
