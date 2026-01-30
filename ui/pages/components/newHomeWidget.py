@@ -15,19 +15,19 @@ class NewHomeWidget(ui.element):
         
         theme = globalSettings.theme
 
-        # Styling
+        # style the main container (the widget card)
         self.classes('w-full h-full min-h-[300px] flex items-center justify-center rounded-xl border-2 border-dashed cursor-pointer transition-all duration-300')
 
         self.style(f'border-color: {theme.text_placeholder}; background-color: transparent;')
         
-        # Hover Effect
+        # hover effect 
         self.classes('hover:bg-gray-50/50 opacity-50 hover:opacity-100')
 
-        # Register the Click Event
+        # register the click event
         self.on('click', on_click)
 
         with self:
-            # Draws the circle around the plus sign
+            # draws the plus icon
             with ui.element('div').classes('rounded-full w-16 h-16 flex items-center justify-center border') \
                  .style(f'border-color: {theme.text_placeholder};'):
                 

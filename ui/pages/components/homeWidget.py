@@ -3,6 +3,7 @@ from modules.globalSettings import globalSettings
 
 
 class HomeWidget(ui.element):
+    # constructor
     def __init__(self, title: str):
         super().__init__('div') 
         
@@ -27,5 +28,5 @@ class HomeWidget(ui.element):
 
     @property
     def content(self):
-        """Returns the inner container to add content to."""
+        # returns the inner container to add content to
         return self.__content_container
