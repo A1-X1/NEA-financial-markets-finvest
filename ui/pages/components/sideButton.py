@@ -2,8 +2,10 @@ from nicegui import ui
 from modules.globalSettings import GlobalSettings, globalSettings
 from typing import Callable
 
+# side button class inherits from ui.button
 class SideButton(ui.button):
     
+    # initialise attributes and calls constructor of parent class
     def __init__(self, buttonLabel : str, icon: str, callbackFunction : Callable, isActive: bool = False):
         self.__isActive = isActive,
         self.__buttonLabel = buttonLabel
@@ -12,26 +14,28 @@ class SideButton(ui.button):
 
         super().__init__(color=None, on_click=self.__handle_click)
 
-
-        self.update()
+        # applies styles to the button based on the theme and state
         self.applyStyles()
 
+        # adds the icon and label to the button
         with self:
             with ui.row().classes('items-center justify-start gap-4 w-full no-wrap px-4'):
                 ui.icon(icon).classes('text-2xl')
                 # The label will be hidden by the drawer's 'mini' state logic
                 ui.label(buttonLabel).classes('truncate')
 
+    # handles the click event
     def __handle_click(self) -> None:
-        # Trigger internal logic
+        
+        # toggles the button state
         self.toggle()
         self.applyStyles()
         
-        # Trigger the external page load logic
+        # calls the external callback function if it exists
         if self.__external_callback:
             self.__external_callback()
 
-    # the colour isnt getting applied
+    # applies styles to the button based on the theme and state
     def applyStyles(self):
         Theme = globalSettings.theme
 
@@ -43,18 +47,14 @@ class SideButton(ui.button):
 
         self.style(f'width: 85%; color: {foreground_colour} ; background: {background_colour};')
 
-    
+    # toggles the button state
     def toggle(self) -> None: 
-        """Toggle the button state.""" 
         self.__isActive = not self.__isActive 
-        self.update()
+        self.applyStyles()
 
     def toggle_active(self, state: bool) -> None:
-        # Changes the internal state and triggers a style refresh
         self.__isActive = state
         self.applyStyles()
 
-    def update(self) -> None:
-        super().update()
 
     
