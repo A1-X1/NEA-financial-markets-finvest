@@ -5,7 +5,7 @@ from modules.globalSettings import globalSettings, GlobalSettings
 
 @dataclass
 class SettingsTile(ui.row):
-    
+
     def __init__(self, label: str, icon: str, icon_bg_colour: str, icon_colour: str, initial_value: bool, on_change: Callable):
         super().__init__()
         self.__label = label
@@ -13,7 +13,6 @@ class SettingsTile(ui.row):
         self.__icon_bg_colour = icon_bg_colour
         self.__icon_colour = icon_colour
         
-        # self.classes('w-full items-center justify-between py-2 px-4 bg-transparent')
         self.classes('w-[400px] justify-between py-2 px-0 bg-transparent')
         
         with self:
