@@ -214,6 +214,9 @@ class ChartsPage:
                     icon_name = 'candlestick_chart' if self.__chart_mode == "Candlestick" else "show_chart"
                     self.__toggle_btn = ui.button(icon=icon_name, on_click=self.__toggle_chart_type) \
                         .style(btn_style).props('flat unelevated')
+                    
+                    ui.button('Clear', on_click=self.__clear_chart) \
+                        .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated icon=delete')
 
             self.__chart_container = ui.element('div').classes('w-full flex-grow rounded-xl shadow-sm border border-gray-100/10 p-4 relative') \
                 .style(f'background-color: {theme.surface}')
@@ -225,6 +228,39 @@ class ChartsPage:
                     self.__generate_chart(use_cached=True)
                 else:
                     self.__render_empty_chart()
+
+    def __clear_chart(self):
+        """Clears the chart, resets state, and deletes record from DB."""
+        try:
+            # 1. Delete from DB
+            cursor.execute("DELETE FROM ChartsPageCacheTable WHERE id = 1")
+            connection.commit()
+            
+            # 2. Reset Internal State
+            self._current_processed_data = None
+            self._current_metrics = {}
+            self.__saved_ticker = 'AAPL' # Reset to default or empty
+            self.__saved_timeframe = '1y'
+            self.__saved_title = ''
+            self.__has_saved_state = False
+            
+            # 3. Reset Inputs
+            if self.__ticker_input:
+                self.__ticker_input.value = self.__saved_ticker
+            if self.__title_input:
+                self.__title_input.value = self.__saved_title
+            if self.__timeframe_dropdown:
+                self.__timeframe_dropdown.value = self.__saved_timeframe
+                
+            # 4. Clear/Reset UI
+            self.__metrics_container.clear()
+            self.__render_empty_chart()
+            
+            ui.notify('Chart cleared and saved state deleted.', color='positive')
+            
+        except Exception as e:
+            ui.notify(f"Error clearing chart: {str(e)}", color='negative')
+            print(f"Error clearing chart: {e}")
 
     def __render_empty_chart(self):
         theme = self.__settings.theme
