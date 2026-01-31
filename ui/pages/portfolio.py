@@ -9,6 +9,40 @@ import io
 import pickle
 from modules.database.database import cursor, connection
 
+# Global CSS for Portfolio Page (matching Charts page)
+ui.add_css('''
+    .input-field .q-field__native, .input-field .q-item__label {
+        color: var(--custom-input-color) !important;
+    }
+    
+    .input-field .q-field__label, 
+    .input-field .q-field__native::placeholder {
+        color: var(--custom-placeholder-color) !important;
+    }
+
+    .input-field .q-field__control:before {
+        border-color: var(--custom-input-color) !important;
+        opacity: 0.5; 
+    }
+
+    .input-field .q-field__control:hover:before {
+        border-color: var(--custom-input-color) !important;
+        opacity: 1;
+    }
+
+    .q-manual-focusable--focused > .q-focus-helper,
+    .q-item--active, 
+    .q-item.q-item--clickable:hover {
+        background: var(--custom-accent-soft) !important;
+        color: var(--custom-input-color) !important;
+        opacity: 1 !important;
+    }
+
+    .q-item.q-item--active .q-item__section {
+        color: var(--custom-input-color) !important;
+    }
+''', shared=True)
+
 class PortfolioPage:
     def __init__(self):
         self.__settings = globalSettings
@@ -89,7 +123,6 @@ class PortfolioPage:
             ui.notify(f"Delete failed: {e}", color='negative')
 
 
-
     def __quick_save(self):
         """Saves immediately if already named, otherwise opens dialog"""
         if self.__current_portfolio_Name == "New Portfolio":
@@ -110,7 +143,7 @@ class PortfolioPage:
 
         with ui.dialog() as dialog, ui.card().style(dialog_style):
             ui.label('Save Portfolio As').classes('text-lg font-bold')
-            name_input = ui.input(label='New Name', value="").classes('w-full').style(input_style).props('outlined dense')
+            name_input = ui.input(label='New Name', value="").classes('w-full input-field').style(input_style).props('outlined dense')
             
             with ui.row().classes('w-full justify-end gap-2'):
                 ui.button('Cancel', on_click=dialog.close).style(f'color: {theme.text_primary} !important').props('flat')
