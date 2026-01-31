@@ -90,30 +90,68 @@ class DataHandler:
     @staticmethod
     def get_current_prices(tickers: list) -> dict:
         """
-        Fetches the current price for a list of tickers.
-        Returns a dictionary {ticker: price}.
+        Fetches {ticker: {'price': float, 'currency': str}}
         """
         if not tickers:
             return {}
             
         try:
-            # yfinance allows fetching multiple tickers at once
             tickers_str = " ".join(tickers)
+            # Fetch valid data
+            ticker_objs = yf.Tickers(tickers_str)
+            
+            # If multiple tickers, download returns DF. If single, Series/DF.
+            # Ideally use download for prices and accessing .tickers properties for currency
+            
             data = yf.download(tickers_str, period="1d", progress=False)['Close']
             
-            prices = {}
+            results = {}
             if len(tickers) == 1:
-                # If only one ticker, data is a Series (or scalar if latest)
-                # We need to handle the structure carefully
-                val = data.iloc[-1].item() if not data.empty else 0.0
-                prices[tickers[0]] = val
+                price = data.iloc[-1].item() if not data.empty else 0.0
+                try:
+                    currency = ticker_objs.tickers[tickers[0]].info.get('currency', 'USD')
+                except:
+                    currency = 'USD'
+                results[tickers[0]] = {'price': price, 'currency': currency}
             else:
-                # If multiple, data is a DataFrame
                 current_vals = data.iloc[-1]
                 for tick in tickers:
-                    prices[tick] = current_vals[tick] if tick in current_vals else 0.0
+                    price = current_vals[tick] if tick in current_vals else 0.0
+                    try:
+                        currency = ticker_objs.tickers[tick].info.get('currency', 'USD')
+                    except:
+                        currency = 'USD'
+                    results[tick] = {'price': price, 'currency': currency}
                     
-            return prices
+            return results
         except Exception as e:
             print(f"Error fetching prices: {e}")
-            return {t: 0.0 for t in tickers}
+            return {t: {'price': 0.0, 'currency': 'USD'} for t in tickers}
+
+    @staticmethod
+    def get_exchange_rate(from_currency: str, to_currency: str) -> float:
+        """Fetching exchange rate from Yahoo Finance."""
+        if from_currency == to_currency:
+            return 1.0
+        
+        # Crypto/major pairs usually work like GBPUSD=X
+        pair = f"{from_currency}{to_currency}=X" 
+        try:
+            data = yf.Ticker(pair).history(period="1d")
+            if not data.empty:
+                return data['Close'].iloc[-1]
+            
+            # Try inverse
+            pair_inv = f"{to_currency}{from_currency}=X"
+            data_inv = yf.Ticker(pair_inv).history(period="1d")
+            if not data_inv.empty:
+                return 1.0 / data_inv['Close'].iloc[-1]
+            
+            return 1.0 # Fallback
+        except:
+            return 1.0
+
+    @staticmethod
+    def get_currency_symbol(code: str) -> str:
+        symbols = {'USD': '$', 'GBP': '£', 'EUR': '€', 'JPY': '¥', 'AUD': 'A$', 'CAD': 'C$'}
+        return symbols.get(code, code)

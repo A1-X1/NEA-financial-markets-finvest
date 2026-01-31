@@ -21,44 +21,108 @@ class PortfolioPage:
         self.__chart_container = None
         
         self.__polling_timer = None
+        self.__current_portfolio_Name = "New Portfolio" # Default
         
-        # Load any saved state (optional extension)
-        self.__load_portfolio()
+        # Ensure DB Table Exists
+        self.__init_db()
 
-    def __load_portfolio(self):
-        """Loads portfolio from DB if exists (Simple persistence)"""
+    def __init_db(self):
         try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='PortfolioTable'")
-            if not cursor.fetchone():
-                return
-                
-            cursor.execute("SELECT data FROM PortfolioTable WHERE id = 1")
-            row = cursor.fetchone()
-            if row:
-                # We stored a list of tuples, simpler for pickling than the whole object
-                items = pickle.loads(row[0])
-                for ticker, quantity in items:
-                    self.__portfolio_data.put(ticker, quantity)
-        except Exception:
-            pass
-
-    def __save_portfolio(self):
-        """Persists custom hashtable content to DB"""
-        try:
-            items = self.__portfolio_data.get_all()
-            binary_data = pickle.dumps(items)
-            
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS PortfolioTable (
-                    id INTEGER PRIMARY KEY CHECK (id = 1), 
+                CREATE TABLE IF NOT EXISTS PortfoliosTable (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                    name TEXT UNIQUE,
                     data BLOB
                 )
             """)
-            cursor.execute("INSERT OR REPLACE INTO PortfolioTable (id, data) VALUES (1, ?)", (binary_data,))
             connection.commit()
-            ui.notify('Portfolio Saved', color='positive')
+        except Exception as e:
+            print(f"DB Init Error: {e}")
+
+    def __load_portfolio_by_name(self, name):
+        """Loads a specific portfolio by name"""
+        try:
+            cursor.execute("SELECT data FROM PortfoliosTable WHERE name = ?", (name,))
+            row = cursor.fetchone()
+            if row:
+                self.__portfolio_data.clear()
+                items = pickle.loads(row[0])
+                for ticker, quantity in items:
+                    self.__portfolio_data.put(ticker, quantity)
+                
+                self.__current_portfolio_Name = name
+                self.refresh_view()
+                ui.notify(f"Loaded '{name}'", color='positive')
+        except Exception as e:
+            ui.notify(f"Load failed: {e}", color='negative')
+
+    def __save_current_portfolio(self, name):
+        """Persists current hashtable content to DB with a name"""
+        if not name:
+             ui.notify("Name cannot be empty", color='warning')
+             return
+
+        try:
+            items = self.__portfolio_data.get_all()
+            if not items:
+                 ui.notify("Cannot save empty portfolio", color='warning')
+                 return
+                 
+            binary_data = pickle.dumps(items)
+            
+            cursor.execute("INSERT OR REPLACE INTO PortfoliosTable (name, data) VALUES (?, ?)", (name, binary_data))
+            connection.commit()
+            
+            self.__current_portfolio_Name = name
+            ui.notify(f"Saved as '{name}'", color='positive')
         except Exception as e:
             ui.notify(f"Save failed: {e}", color='negative')
+
+    def __delete_portfolio(self, name, dialog):
+        try:
+            cursor.execute("DELETE FROM PortfoliosTable WHERE name = ?", (name,))
+            connection.commit()
+            ui.notify(f"Deleted '{name}'", color='positive')
+            dialog.close()
+            self.__open_load_dialog() # Re-open to refresh list
+        except Exception as e:
+            ui.notify(f"Delete failed: {e}", color='negative')
+
+    def __open_save_dialog(self):
+        with ui.dialog() as dialog, ui.card():
+            ui.label('Save Portfolio').classes('text-lg font-bold')
+            name_input = ui.input(label='Portfolio Name', value=self.__current_portfolio_Name).classes('w-full')
+            
+            with ui.row().classes('w-full justify-end'):
+                ui.button('Cancel', on_click=dialog.close).props('flat')
+                ui.button('Save', on_click=lambda: (self.__save_current_portfolio(name_input.value), dialog.close()))
+
+        dialog.open()
+
+    def __open_load_dialog(self):
+        with ui.dialog() as dialog, ui.card().classes('w-[400px] h-[400px]'):
+            ui.label('Load Portfolio').classes('text-lg font-bold mb-4')
+            
+            # Fetch all names
+            cursor.execute("SELECT name FROM PortfoliosTable")
+            rows = cursor.fetchall()
+            
+            if not rows:
+                ui.label('No saved portfolios found.').classes('text-gray-500 italic')
+            else:
+                with ui.scroll_area().classes('w-full flex-grow'):
+                    for row in rows:
+                        name = row[0]
+                        with ui.row().classes('w-full justify-between items-center border-b border-gray-200 py-2'):
+                            ui.label(name).classes('text-base cursor-pointer hover:font-bold') \
+                                .on('click', lambda n=name: (self.__load_portfolio_by_name(n), dialog.close()))
+                            
+                            ui.button(icon='close', on_click=lambda n=name: self.__delete_portfolio(n, dialog)) \
+                                .props('flat round dense color=red size=sm')
+                            
+            ui.button('Close', on_click=dialog.close).classes('self-end mt-4').props('flat')
+            
+        dialog.open()
 
     def add_asset(self):
         ticker = self.__ticker_input.value
@@ -100,25 +164,22 @@ class PortfolioPage:
         tickers = [item[0] for item in items]
         
         # 2. Get Fresh Data (Ensure data integrity)
-        prices = DataHandler.get_current_prices(tickers)
+        raw_prices = DataHandler.get_current_prices(tickers)
         
         # 3. Create CSV
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['Ticker', 'Quantity', 'Current Price', 'Total Value'])
+        writer.writerow(['Ticker', 'Quantity', 'Price', 'Currency', 'Value (Local)'])
         
-        total_value = 0
         for ticker, quantity in items:
-            price = prices.get(ticker, 0.0)
+            data = raw_prices.get(ticker, {'price': 0.0, 'currency': 'USD'})
+            price = data['price']
+            currency = data['currency']
             val = price * quantity
-            writer.writerow([ticker, quantity, f"{price:.2f}", f"{val:.2f}"])
-            total_value += val
+            writer.writerow([ticker, quantity, f"{price:.2f}", currency, f"{val:.2f}"])
             
-        writer.writerow([])
-        writer.writerow(['Total Portfolio Value', '', '', f"{total_value:.2f}"])
-        
         ui.download(output.getvalue().encode('utf-8'), 'portfolio_export.csv')
-        ui.notify('CSV Exported', color='positive')
+        ui.notify('CSV Exported to Downloads', color='positive')
 
     def refresh_view(self):
         # 1. Get Assets
@@ -130,72 +191,83 @@ class PortfolioPage:
                 ui.label('Portfolio is empty').classes('text-gray-400 italic')
             return
 
-        # 2. Fetch Prices
+        # 2. Fetch Prices & Logic
         tickers = [item[0] for item in items]
-        prices = DataHandler.get_current_prices(tickers)
+        raw_prices = DataHandler.get_current_prices(tickers)
         
-        # 3. Prepare Data for UI
+        user_currency_obj = self.__settings.currency 
+        user_currency_code = user_currency_obj.code if user_currency_obj else 'USD'
+        user_currency_symbol = DataHandler.get_currency_symbol(user_currency_code)
+
         table_rows = []
-        plot_data = [] # Ticker, Value
-        total_mv = 0
+        plot_data = [] 
+        total_mv_user_currency = 0
         
         for ticker, quantity in items:
-            price = prices.get(ticker, 0.0)
-            val = price * quantity
-            total_mv += val
+            data = raw_prices.get(ticker, {'price': 0.0, 'currency': 'USD'})
+            price = data['price']
+            asset_currency = data['currency']
+            
+            # Value in asset's NATIVE currency
+            val_native = price * quantity
+            asset_symbol = DataHandler.get_currency_symbol(asset_currency)
+            
+            # Convert to USER'S preferred currency for TOTAL and CHART
+            rate = DataHandler.get_exchange_rate(asset_currency, user_currency_code)
+            val_in_user_ccy = val_native * rate
+            total_mv_user_currency += val_in_user_ccy
             
             table_rows.append({
                 'Symbol': ticker,
                 'Units': quantity,
-                'Price': f"${price:.2f}",
-                'Value': f"${val:.2f}",
-                'action': ticker # for naming the delete button
+                'Price': f"{asset_symbol}{price:,.2f}",
+                'Value': f"{asset_symbol}{val_native:,.2f}", 
+                # 'Value' col in table shows NATIVE currency as requested ("make the composition use the units of the currency itself")
+                'action': ticker 
             })
             
-            plot_data.append({'Ticker': ticker, 'Value': val})
+            plot_data.append({'Ticker': ticker, 'Value': val_in_user_ccy})
 
         # 4. Render Table
         self.__table_container.clear()
         with self.__table_container:
-            # Create a simple clean table manually for full control or use ui.table
-            # Using ui.grid for custom row layout as shown in reference image "AAPL 20 (X)"
+            theme = self.__settings.theme
             
-            ui.label('Current Composition').classes('text-lg font-bold mb-2') \
-                .style(f'color: {self.__settings.theme.accent}')
+            with ui.row().classes('items-center justify-between mb-2'):
+                ui.label('Current Composition').classes('text-lg font-bold') \
+                    .style(f'color: {theme.text_primary}')
+                # Total Value Header
+                ui.label(f"Total: {user_currency_symbol}{total_mv_user_currency:,.2f}").classes('text-xl font-bold') \
+                    .style(f'color: {theme.accent}')
             
             # Header
             with ui.row().classes('w-full border-b border-gray-600/20 pb-2 mb-2 justify-between'):
-                ui.label('Symbol').classes('w-16 font-semibold')
-                ui.label('Units').classes('w-16 font-semibold')
-                ui.label('Value').classes('w-24 font-semibold text-right')
-                ui.label('').classes('w-8') # Action col
+                ui.label('Symbol').classes('w-16 font-semibold').style(f'color: {theme.text_primary}')
+                ui.label('Units').classes('w-16 font-semibold').style(f'color: {theme.text_primary}')
+                ui.label('Value (Local)').classes('w-28 font-semibold text-right').style(f'color: {theme.text_primary}')
+                ui.label('').classes('w-8') 
                 
             # Rows
-            for row in table_rows:
-                with ui.row().classes('w-full items-center justify-between py-1'):
-                    ui.label(row['Symbol']).classes('w-16')
-                    ui.label(str(row['Units'])).classes('w-16')
-                    ui.label(row['Value']).classes('w-24 text-right')
-                    
-                    # Delete Button
-                    ui.button(icon='cancel', on_click=lambda t=row['Symbol']: self.remove_asset(t)) \
-                        .props('flat dense size=sm color=red') \
-                        .classes('w-8')
-
-            # Total
-            with ui.row().classes('w-full border-t border-gray-600/20 pt-4 mt-2 justify-between'):
-                ui.label('Total Value').classes('font-bold')
-                ui.label(f"${total_mv:.2f}").classes('font-bold text-xl')
+            with ui.scroll_area().classes('h-64 w-full'):
+                for row in table_rows:
+                    with ui.row().classes('w-full items-center justify-between py-1 hover:bg-gray-500/10'):
+                        ui.label(row['Symbol']).classes('w-16').style(f'color: {theme.text_primary}')
+                        ui.label(str(row['Units'])).classes('w-16').style(f'color: {theme.text_primary}')
+                        ui.label(row['Value']).classes('w-28 text-right').style(f'color: {theme.text_primary}')
+                        
+                        ui.button(icon='cancel', on_click=lambda t=row['Symbol']: self.remove_asset(t)) \
+                            .props('flat dense size=sm color=red') \
+                            .classes('w-8')
 
         # 5. Render Chart
         self.__chart_container.clear()
         with self.__chart_container:
             df = pd.DataFrame(plot_data)
-            if not df.empty and total_mv > 0:
+            if not df.empty and total_mv_user_currency > 0:
                 viz = PortfolioVisualisation(
-                    title_input=f"Portfolio Value: ${total_mv:,.2f}",
+                    title_input=f"Total: {user_currency_symbol}{total_mv_user_currency:,.2f}",
                     data_input=df,
-                    currency_input="USD"
+                    currency_input="USD" # Not critical for Pie, logic is handled
                 )
                 fig = viz.generate_pie_chart()
                 ui.plotly(fig).classes('w-full h-full')
@@ -205,7 +277,7 @@ class PortfolioPage:
     def render(self):
         theme = self.__settings.theme
         
-        # Consistent Styles (borrowed/adapted from charts.py)
+        # Styles
         input_style = (
             f'--custom-input-color: {theme.text_primary}; '
             f'--custom-placeholder-color: {theme.text_placeholder}; '
@@ -215,46 +287,54 @@ class PortfolioPage:
         btn_style = f'background-color: {theme.sb_active_bg} !important; color: {theme.sb_active_fg} !important;'
 
         with ui.element('div').classes('w-full h-full flex flex-col p-8 gap-6'):
-            ui.label('Portfolio').style(f'color: {theme.accent}; font-size: 200%; font-weight: bold')
-
-            # Main Grid Layout
-            with ui.row().classes('w-full flex-grow gap-8'):
+            
+            with ui.row().classes('items-center justify-between w-full'):
+                ui.label(f'Portfolio: {self.__current_portfolio_Name}').style(f'color: {theme.accent}; font-size: 200%; font-weight: bold')
                 
-                # LEFT: Visualization
-                self.__chart_container = ui.card().classes('col-span-1 flex-grow h-[500px] w-2/3 p-4 shadow-sm border border-gray-100/10') \
+                # Portfolio Actions (Save/Load/Exprt)
+                with ui.row().classes('gap-2'):
+                    ui.button('Save', icon='save', on_click=self.__open_save_dialog) \
+                        .style(btn_style).props('flat unelevated')
+                    ui.button('Load', icon='folder_open', on_click=self.__open_load_dialog) \
+                        .style(btn_style).props('flat unelevated')
+                    ui.button('Export', icon='download', on_click=self.export_csv) \
+                        .style(btn_style).props('flat unelevated')
+
+            # NEW LAYOUT: Single Row containing 3 equal(ish) sections
+            # Chart | Controls | Table
+            
+            with ui.row().classes('w-full h-[600px] gap-6 flex-nowrap'):
+                
+                # 1. Visualization (Larger)
+                self.__chart_container = ui.card().classes('w-1/2 h-full p-4 shadow-sm border border-gray-100/10') \
                     .style(f'background-color: {theme.surface}')
                 
-                # RIGHT: Controls & Table
-                with ui.column().classes('w-1/3 min-w-[300px] gap-6'):
-                    
-                    # Controls Card
-                    with ui.card().classes('w-full p-6 gap-4 shadow-sm border border-gray-100/10').style(f'background-color: {theme.surface}'):
-                        self.__ticker_input = ui.input(label='stock ticker symbol') \
-                            .classes('w-full input-field').props('outlined dense uppercase').style(input_style)
-                            
-                        self.__shares_input = ui.input(label='shares owned') \
-                            .classes('w-full input-field').props('outlined dense type=number').style(input_style)
-                        
-                        ui.button('Add to portfolio', on_click=self.add_asset) \
-                            .style(btn_style).classes('w-full font-bold').props('flat unelevated')
-
-                    # Composition Table Container
-                    self.__table_container = ui.card().classes('w-full p-6 flex-grow shadow-sm border border-gray-100/10') \
-                        .style(f'background-color: {theme.surface}')
-
-            # Footer Actions
-            with ui.row().classes('gap-4 mt-4'):
-                ui.button('Save Portfolio', on_click=self.__save_portfolio) \
-                    .style(btn_style).props('flat unelevated')
+                # Container for Right Side (Controls + Table) - Could be separate cols or stacked
+                # User asked for "current composition to be in the same row as the add to portfolio block"
                 
-                ui.button('Load Portfolio', on_click=lambda: (self.__load_portfolio(), self.refresh_view())) \
-                    .style(btn_style).props('flat unelevated')
+                # Let's make it 3 Columns: Chart | Controls | Table
+                
+                # 2. Controls
+                with ui.card().classes('w-1/4 h-full p-6 gap-4 shadow-sm border border-gray-100/10 flex flex-col').style(f'background-color: {theme.surface}'):
+                    ui.label('Add Asset').classes('text-lg font-bold mb-4').style(f'color: {theme.text_primary}')
                     
-                ui.button('Export CSV', on_click=self.export_csv) \
-                    .style(btn_style).props('flat unelevated')
+                    self.__ticker_input = ui.input(label='stock ticker symbol') \
+                        .classes('w-full input-field').props('outlined dense uppercase').style(input_style)
+                        
+                    self.__shares_input = ui.input(label='shares owned') \
+                        .classes('w-full input-field').props('outlined dense type=number').style(input_style)
+                    
+                    ui.button('Add to portfolio', on_click=self.add_asset) \
+                        .style(btn_style).classes('w-full font-bold mt-2').props('flat unelevated')
+
+                # 3. Composition Table
+                self.__table_container = ui.card().classes('w-1/4 h-full p-6 shadow-sm border border-gray-100/10 flex flex-col') \
+                    .style(f'background-color: {theme.surface}')
 
         # Initial View
         self.refresh_view()
         
         # START POLLING (Every 10 seconds)
-        self.__polling_timer = ui.timer(10.0, self.refresh_view)
+        if self.__polling_timer:
+            self.__polling_timer.cancel()
+        self.__polling_timer = ui.timer(15.0, self.refresh_view)
