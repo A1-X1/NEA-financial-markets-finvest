@@ -178,7 +178,6 @@ class ChartsPage:
             f'background-color: {theme.surface} !important; '
             f'color: {theme.text_primary} !important;'
         )
-        
 
         btn_style = f'background-color: {theme.sb_active_bg} !important; color: {theme.sb_active_fg} !important;'
 

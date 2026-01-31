@@ -23,6 +23,27 @@ class Visualisation:
         self.data = self.data_input
         self.currency = self.currency_input
 
+    def _apply_theme_layout(self, fig: go.Figure):
+        theme = globalSettings.theme
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color=theme.text_primary),
+            title_font=dict(color=theme.accent),
+            xaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)', 
+                zerolinecolor=theme.accent,
+                tickfont=dict(color=theme.text_secondary)
+            ),
+            yaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)', 
+                zerolinecolor=theme.accent,
+                tickfont=dict(color=theme.text_secondary)
+            ),
+            margin=dict(l=40, r=40, t=60, b=40)
+        )
+        return fig
+
     # getters and setters
     @property
     def chart_title(self) -> str:
@@ -54,27 +75,6 @@ class Visualisation:
             self.__currency = "USD"
         else:
             self.__currency = value
-
-    def _apply_theme_layout(self, fig: go.Figure):
-        theme = globalSettings.theme
-        fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color=theme.text_primary),
-            title_font=dict(color=theme.accent),
-            xaxis=dict(
-                gridcolor='rgba(128,128,128,0.2)', 
-                zerolinecolor=theme.accent,
-                tickfont=dict(color=theme.text_secondary)
-            ),
-            yaxis=dict(
-                gridcolor='rgba(128,128,128,0.2)', 
-                zerolinecolor=theme.accent,
-                tickfont=dict(color=theme.text_secondary)
-            ),
-            margin=dict(l=40, r=40, t=60, b=40)
-        )
-        return fig
 
 
 @dataclass
