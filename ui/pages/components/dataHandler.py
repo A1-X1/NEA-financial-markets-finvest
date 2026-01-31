@@ -86,3 +86,34 @@ class DataHandler:
         return self.__raw_data
 
 
+
+    @staticmethod
+    def get_current_prices(tickers: list) -> dict:
+        """
+        Fetches the current price for a list of tickers.
+        Returns a dictionary {ticker: price}.
+        """
+        if not tickers:
+            return {}
+            
+        try:
+            # yfinance allows fetching multiple tickers at once
+            tickers_str = " ".join(tickers)
+            data = yf.download(tickers_str, period="1d", progress=False)['Close']
+            
+            prices = {}
+            if len(tickers) == 1:
+                # If only one ticker, data is a Series (or scalar if latest)
+                # We need to handle the structure carefully
+                val = data.iloc[-1].item() if not data.empty else 0.0
+                prices[tickers[0]] = val
+            else:
+                # If multiple, data is a DataFrame
+                current_vals = data.iloc[-1]
+                for tick in tickers:
+                    prices[tick] = current_vals[tick] if tick in current_vals else 0.0
+                    
+            return prices
+        except Exception as e:
+            print(f"Error fetching prices: {e}")
+            return {t: 0.0 for t in tickers}
