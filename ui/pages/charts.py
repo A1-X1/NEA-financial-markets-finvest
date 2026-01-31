@@ -114,7 +114,6 @@ class ChartsPage:
             # defaults are already set above, so safe here
 
     def __save_state(self):
-        """Saves the current inputs and data to SQLite using pickle."""
         try:
             # create the data container
             cache_obj = ChartsPageCache(
