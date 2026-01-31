@@ -9,7 +9,7 @@ import io
 import pickle
 from modules.database.database import cursor, connection
 
-# Global CSS for Portfolio Page (matching Charts page)
+# global CSS for Portfolio Page 
 ui.add_css('''
     .input-field .q-field__native, .input-field .q-item__label {
         color: var(--custom-input-color) !important;
@@ -46,7 +46,7 @@ ui.add_css('''
 class PortfolioPage:
     def __init__(self):
         self.__settings = globalSettings
-        # Instantiate the custom HashTable
+        # instantiate the custom HashTable
         self.__portfolio_data = HashTable(capacity=50) 
         
         self.__ticker_input = None
@@ -57,7 +57,7 @@ class PortfolioPage:
         self.__polling_timer = None
         self.__current_portfolio_Name = "New Portfolio" # Default
         
-        # Ensure DB Table Exists
+        # ensure DB Table Exists
         self.__init_db()
 
     def __init_db(self):
@@ -74,7 +74,7 @@ class PortfolioPage:
             print(f"DB Init Error: {e}")
 
     def __load_portfolio_by_name(self, name):
-        """Loads a specific portfolio by name"""
+        # loads a specific portfolio by name
         try:
             cursor.execute("SELECT data FROM PortfoliosTable WHERE name = ?", (name,))
             row = cursor.fetchone()
@@ -91,7 +91,7 @@ class PortfolioPage:
             ui.notify(f"Load failed: {e}", color='negative')
 
     def __save_current_portfolio(self, name):
-        """Persists current hashtable content to DB with a name"""
+        # saves current hashtable content to DB with a name
         if not name:
              ui.notify("Name cannot be empty", color='warning')
              return
@@ -118,13 +118,13 @@ class PortfolioPage:
             connection.commit()
             ui.notify(f"Deleted '{name}'", color='positive')
             dialog.close()
-            self.__open_load_dialog() # Re-open to refresh list
+            self.__open_load_dialog() # re open to refresh list
         except Exception as e:
             ui.notify(f"Delete failed: {e}", color='negative')
 
 
     def __quick_save(self):
-        """Saves immediately if already named, otherwise opens dialog"""
+        # saves immediately if already named, otherwise opens dialog
         if self.__current_portfolio_Name == "New Portfolio":
             self.__open_save_dialog()
         else:
@@ -199,7 +199,7 @@ class PortfolioPage:
             ui.notify('Shares must be a positive number', color='warning')
             return
             
-        # Put into HashTable (Handles Duplicates/Updates)
+        # put into HashTable (handles duplicates/updates)
         self.__portfolio_data.put(ticker.upper(), shares)
         
         self.__ticker_input.value = ''
@@ -214,7 +214,7 @@ class PortfolioPage:
             ui.notify(f"Removed {ticker}", color='positive')
 
     def export_csv(self):
-        # 1. Get Composition
+        # get composition
         items = self.__portfolio_data.get_all()
         if not items:
             ui.notify('Portfolio is empty', color='warning')
@@ -222,10 +222,10 @@ class PortfolioPage:
             
         tickers = [item[0] for item in items]
         
-        # 2. Get Fresh Data (Ensure data integrity)
+        # get fresh data (ensure data integrity)
         raw_prices = DataHandler.get_current_prices(tickers)
         
-        # 3. Create CSV
+        # create CSV
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(['Ticker', 'Quantity', 'Price', 'Currency', 'Value (Local)'])
@@ -241,11 +241,11 @@ class PortfolioPage:
         ui.notify('CSV Exported to Downloads', color='positive')
 
     def refresh_view(self):
-        # 0. Update Title
+        # update title
         if hasattr(self, '_PortfolioPage__header_label') and self.__header_label:
             self.__header_label.set_text(f'Portfolio: {self.__current_portfolio_Name}')
 
-        # 1. Get Assets
+        # get assets
         items = self.__portfolio_data.get_all()
         if not items:
             self.__chart_container.clear()
@@ -254,7 +254,7 @@ class PortfolioPage:
                 ui.label('Portfolio is empty').classes('text-gray-400 italic')
             return
 
-        # 2. Fetch Prices & Logic
+        # fetch prices & logic
         tickers = [item[0] for item in items]
         raw_prices = DataHandler.get_current_prices(tickers)
         
@@ -271,11 +271,11 @@ class PortfolioPage:
             price = data['price']
             asset_currency = data['currency']
             
-            # Value in asset's NATIVE currency
+            # value in asset's native currency
             val_native = price * quantity
             asset_symbol = DataHandler.get_currency_symbol(asset_currency)
             
-            # Convert to USER'S preferred currency for TOTAL and CHART
+            # convert to user's preferred currency for total and chart
             rate = DataHandler.get_exchange_rate(asset_currency, user_currency_code)
             val_in_user_ccy = val_native * rate
             total_mv_user_currency += val_in_user_ccy
@@ -285,13 +285,13 @@ class PortfolioPage:
                 'Units': quantity,
                 'Price': f"{asset_symbol}{price:,.2f}",
                 'Value': f"{asset_symbol}{val_native:,.2f}", 
-                # 'Value' col in table shows NATIVE currency as requested ("make the composition use the units of the currency itself")
+                # 'Value' col in table shows native currency as requested ("make the composition use the units of the currency itself")
                 'action': ticker 
             })
             
             plot_data.append({'Ticker': ticker, 'Value': val_in_user_ccy})
 
-        # 4. Render Table
+        # render table
         self.__table_container.clear()
         with self.__table_container:
             theme = self.__settings.theme
@@ -299,18 +299,18 @@ class PortfolioPage:
             with ui.row().classes('items-center justify-between mb-2'):
                 ui.label('Current Composition').classes('text-lg font-bold') \
                     .style(f'color: {theme.text_primary}')
-                # Total Value Header
+                # total value header
                 ui.label(f"Total: {user_currency_symbol}{total_mv_user_currency:,.2f}").classes('text-xl font-bold') \
                     .style(f'color: {theme.accent}')
             
-            # Header
+            # header
             with ui.row().classes('w-full border-b border-gray-600/20 pb-2 mb-2 justify-between'):
                 ui.label('Symbol').classes('w-16 font-semibold').style(f'color: {theme.text_primary}')
                 ui.label('Units').classes('w-16 font-semibold').style(f'color: {theme.text_primary}')
                 ui.label('Value (Local)').classes('w-28 font-semibold text-right').style(f'color: {theme.text_primary}')
                 ui.label('').classes('w-8') 
                 
-            # Rows
+            # rows
             with ui.scroll_area().classes('h-64 w-full'):
                 for row in table_rows:
                     with ui.row().classes('w-full items-center justify-between py-1 hover:bg-gray-500/10'):
@@ -322,7 +322,7 @@ class PortfolioPage:
                             .props('flat dense size=sm color=red') \
                             .classes('w-8')
 
-        # 5. Render Chart
+        # render chart
         self.__chart_container.clear()
         with self.__chart_container:
             df = pd.DataFrame(plot_data)
@@ -351,12 +351,12 @@ class PortfolioPage:
 
         with ui.element('div').classes('w-full h-full flex flex-col p-8 gap-6'):
             
-            # Header Row
+            # header row
             with ui.row().classes('items-center justify-between w-full'):
                 self.__header_label = ui.label(f'Portfolio: {self.__current_portfolio_Name}') \
                     .style(f'color: {theme.accent}; font-size: 200%; font-weight: bold')
                 
-                # Portfolio Actions
+                # portfolio actions
                 with ui.row().classes('gap-2'):
                     ui.button('Save', icon='save', on_click=self.__quick_save) \
                         .style(btn_style).props('flat unelevated')
@@ -370,21 +370,15 @@ class PortfolioPage:
                     ui.button('Export', icon='download', on_click=self.export_csv) \
                         .style(btn_style).props('flat unelevated')
 
-            # NEW LAYOUT: Single Row containing 3 equal(ish) sections
-            # Chart | Controls | Table
+            # layout single row containing 3 equal(ish) sections
             
             with ui.row().classes('w-full h-[600px] gap-6 flex-nowrap'):
                 
-                # 1. Visualization (Larger)
+                # visualization (Larger)
                 self.__chart_container = ui.card().classes('w-1/2 h-full p-4 shadow-sm border border-gray-100/10') \
                     .style(f'background-color: {theme.surface}')
                 
-                # Container for Right Side (Controls + Table) - Could be separate cols or stacked
-                # User asked for "current composition to be in the same row as the add to portfolio block"
-                
-                # Let's make it 3 Columns: Chart | Controls | Table
-                
-                # 2. Controls
+                # controls
                 with ui.card().classes('w-1/4 h-full p-6 gap-4 shadow-sm border border-gray-100/10 flex flex-col').style(f'background-color: {theme.surface}'):
                     ui.label('Add Asset').classes('text-lg font-bold mb-4').style(f'color: {theme.text_primary}')
                     
@@ -397,14 +391,14 @@ class PortfolioPage:
                     ui.button('Add to portfolio', on_click=self.add_asset) \
                         .style(btn_style).classes('w-full font-bold mt-2').props('flat unelevated')
 
-                # 3. Composition Table
+                # composition table
                 self.__table_container = ui.card().classes('w-1/4 h-full p-6 shadow-sm border border-gray-100/10 flex flex-col') \
                     .style(f'background-color: {theme.surface}')
 
-        # Initial View
+        # initial view
         self.refresh_view()
         
-        # START POLLING (Every 10 seconds)
+        # start polling (every 10 seconds)
         if self.__polling_timer:
             self.__polling_timer.cancel()
         self.__polling_timer = ui.timer(15.0, self.refresh_view)
