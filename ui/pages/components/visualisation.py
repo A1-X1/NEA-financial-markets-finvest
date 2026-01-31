@@ -92,7 +92,7 @@ class RiskTrendVisualisation(Visualisation):
                 low=self.data['Low'],
                 close=self.data['Close'],
                 name='Market Data'
-                # Default colors are green (increasing) and red (decreasing)
+                # default colors are green (increasing) and red (decreasing)
             ))
         
         # add line trace if mode is line
