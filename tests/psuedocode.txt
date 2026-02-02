@@ -1,0 +1,69 @@
+class DataHandler
+    private tickerSymbol
+    private period
+    private rawData
+    private processedData
+    private currency
+
+    public procedure new(pTickerSymbol, pPeriod)
+        tickerSymbol = pTickerSymbol
+        period = pPeriod
+        currency = "USD"
+    endprocedure
+
+    public function fetchMarketData()
+        print("Fetching data for " + tickerSymbol + " with period " + period)
+        ticker = yfinance.Ticker(tickerSymbol)
+        data = ticker.history(period)
+        
+        if data.empty == True then
+            throw ValueError("No data found")
+        endif
+        
+        try
+            currency = ticker.info.get("currency", "USD")
+        catch
+            currency = "USD"
+        endtry
+        
+        rawData = data.reset_index()
+        return rawData
+    endfunction
+
+    public function prepareRiskData()
+        if rawData == str(None) then
+            throw ValueError("Fetch data first")
+        endif
+        
+        df = rawData.copy()
+        df["Daily_Return"] = df["Close"].pct_change()
+        df["Volatility"] = df["Daily_Return"].rolling(5).std()
+        
+        processedData = df.dropna()
+        return processedData
+    endfunction
+
+    public function getExchangeRate(fromCurrency, toCurrency)
+        if fromCurrency == toCurrency then
+            return 1.0
+        endif
+        
+        pair = fromCurrency + toCurrency + "=X"
+        data = yfinance.Ticker(pair).history("1d")
+        
+        if data.empty == False then
+            return data["Close"].lastValue()
+        else
+            return 1.0
+        endif
+    endfunction
+
+    public function getCurrencySymbol(code)
+        symbols = {"USD": "$", "GBP": "£", "EUR": "€"}
+        if symbols.exists(code) then
+            return symbols[code]
+        else
+            return code
+        endif
+    endfunction
+endclass

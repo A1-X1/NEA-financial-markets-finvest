@@ -111,10 +111,7 @@ class RiskTrendVisualisation(Visualisation):
 
 @dataclass
 class PortfolioVisualisation(Visualisation):
-    """
-    Specialized visualisation for portfolio composition.
-    Expects 'data_input' to be a DataFrame with columns ['Ticker', 'Value'].
-    """
+    # specialised method to generate pie chart, data_input is expected to be a dataframe with columns ['Ticker', 'Value']
     def generate_pie_chart(self) -> go.Figure:
         theme = globalSettings.theme
         
@@ -123,7 +120,9 @@ class PortfolioVisualisation(Visualisation):
             values='Value', 
             names='Ticker', 
             title=self.chart_title,
-            hole=0.4 # Donut chart style
+
+            # customises what the visualisation looks like
+            hole=0.4
         )
         
         fig.update_traces(
@@ -132,7 +131,7 @@ class PortfolioVisualisation(Visualisation):
             marker=dict(line=dict(color=theme.background, width=2))
         )
         
-        # Apply standard layout but with some specific tweaks for Pie
+        # apply standard layout but with some differences for pie chart
         fig = self._apply_theme_layout(fig)
         fig.update_layout(
             showlegend=False,
