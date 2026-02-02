@@ -8,63 +8,85 @@ from ui.pages.news import NewsPage
 from ui.pages.portfolio import PortfolioPage
 from ui.pages.settings import SettingsPage
 
-# instantiate the layout renderer
-layout_renderer = DashboardLayout()
 
-# routing for page (/ is home page)
-@ui.page('/')
-def index():
-    layout_renderer.render(active_route='home')
-    
-    with ui.column().classes('w-full p-4'):
-        page = HomePage()
-        page.render()
+# instantiate the app class
+class MainApp:
+    def __init__(self):
+        self.globalSettings = globalSettings
+        self.layout_renderer = DashboardLayout()
+        self.setup_routes()
 
-# routing for settingspage
-@ui.page('/settings')
-def settings():
-    layout_renderer.render(active_route='settings')
-    
-    with ui.column().classes('w-full p-4'):
-        page = SettingsPage()
-        page.render()
+    def setup_routes(self):
+        # routing for page (/ is home page)
+        @ui.page('/')
+        def index():
+            self.layout_renderer.render(active_route='home')
+            
+            with ui.column().classes('w-full p-4'):
+                page = HomePage()
+                page.render()
 
-# routing for charts page
-@ui.page('/charts')
-def charts():
-    layout_renderer.render(active_route='charts')
-    
-    with ui.column().classes('w-full p-4'):
-        page = ChartsPage()
-        page.render()
+        # routing for settingspage
+        @ui.page('/settings')
+        def settings():
+            self.layout_renderer.render(active_route='settings')
+            
+            with ui.column().classes('w-full p-4'):
+                page = SettingsPage()
+                page.render()
 
-# routing for portfolio page
-@ui.page('/portfolio')
-def portfolio():
-    layout_renderer.render(active_route='portfolio')
-    
-    with ui.column().classes('w-full p-4'):
-        page = PortfolioPage()
-        page.render()
+        # routing for charts page
+        @ui.page('/charts')
+        def charts():
+            self.layout_renderer.render(active_route='charts')
+            
+            with ui.column().classes('w-full p-4'):
+                page = ChartsPage()
+                page.render()
 
-# routing for simulation page
-@ui.page('/simulation')
-def simulation():
-    layout_renderer.render(active_route='simulation')
-    
-    with ui.column().classes('w-full p-4'):
-        page = SimulationPage()
-        page.render()
+        # routing for portfolio page
+        @ui.page('/portfolio')
+        def portfolio():
+            self.layout_renderer.render(active_route='portfolio')
+            
+            with ui.column().classes('w-full p-4'):
+                page = PortfolioPage()
+                page.render()
 
-# routing for news page
-@ui.page('/news')
-def news():
-    layout_renderer.render(active_route='news')
-    
-    with ui.column().classes('w-full p-4'):
-        page = NewsPage()
-        page.render()
+        # routing for simulation page
+        @ui.page('/simulation')
+        def simulation():
+            self.layout_renderer.render(active_route='simulation')
+            
+            with ui.column().classes('w-full p-4'):
+                page = SimulationPage()
+                page.render()
+
+        # routing for news page
+        @ui.page('/news')
+        def news():
+            self.layout_renderer.render(active_route='news')
+            
+            with ui.column().classes('w-full p-4'):
+                page = NewsPage()
+                page.render()
+
+    def start(self):
+        # ensures all prerequisites are ready before loading the app
+        print("Checking prerequisites...")
+        if not self.globalSettings:
+            print("Error: Global settings not loaded.")
+            return False
+            
+        print("Prerequisites check passed.")
+        return True
+
+    def runApplication(self):
+        # launches the ui
+        ui.run(title="Finvest Risk Manager", port=8080, native=True)
 
 
-# runs the main app
-ui.run(title="Finvest Risk Manager", port=8080, native=True)
+if __name__ in {"__main__", "__mp_main__"}:
+    app = MainApp()
+    if app.start():
+        app.runApplication()

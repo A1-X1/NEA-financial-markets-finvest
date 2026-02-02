@@ -131,3 +131,81 @@ class Visualisation
         return currency
     endfunction
 endclass
+
+
+class MainApp
+    private globalSettings
+    private layout_renderer
+
+    public procedure new()
+        globalSettings = GlobalSettings.instance()
+        layout_renderer = new DashboardLayout()
+        setupRoutes()
+    endprocedure
+
+    private procedure setupRoutes()
+        registerRoute("/", indexPage)
+        registerRoute("/settings", settingsPage)
+        registerRoute("/charts", chartsPage)
+        registerRoute("/portfolio", portfolioPage)
+        registerRoute("/simulation", simulationPage)
+        registerRoute("/news", newsPage)
+    endprocedure
+
+    public function indexPage()
+        layout_renderer.render("home")
+        page = new HomePage()
+        page.render()
+    endfunction
+
+    public function settingsPage()
+        layout_renderer.render("settings")
+        page = new SettingsPage()
+        page.render()
+    endfunction
+
+    public function chartsPage()
+        layout_renderer.render("charts")
+        page = new ChartsPage()
+        page.render()
+    endfunction
+
+    public function portfolioPage()
+        layout_renderer.render("portfolio")
+        page = new PortfolioPage()
+        page.render()
+    endfunction
+
+    public function simulationPage()
+        layout_renderer.render("simulation")
+        page = new SimulationPage()
+        page.render()
+    endfunction
+
+    public function newsPage()
+        layout_renderer.render("news")
+        page = new NewsPage()
+        page.render()
+    endfunction
+
+    public function start()
+        print("Checking prerequisites...")
+        if globalSettings == str(None) then
+            print("Error: Global settings not loaded.")
+            return False
+        endif
+        
+        print("Prerequisites check passed.")
+        return True
+    endfunction
+
+    public procedure runApplication()
+        ui.run("Finvest Risk Manager", 8080, True)
+    endprocedure
+endclass
+
+// Main Execution Block
+app = new MainApp()
+if app.start() == True then
+    app.runApplication()
+endif
