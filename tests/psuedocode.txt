@@ -67,3 +67,67 @@ class DataHandler
         endif
     endfunction
 endclass
+
+class Visualisation
+    private chartTitle
+    private data
+    private currency
+
+    public procedure new(pTitle, pData, pCurrency)
+        setChartTitle(pTitle)
+        setData(pData)
+        setCurrency(pCurrency)
+    endprocedure
+
+    private function applyThemeLayout(fig)
+        theme = globalSettings.getTheme()
+        
+        fig.paper_bgcolor = "rgba(0,0,0,0)"
+        fig.plot_bgcolor = "rgba(0,0,0,0)"
+        fig.fontColor = theme.text_primary
+        fig.titleFontColor = theme.accent
+        
+        fig.xaxis.gridcolor = "rgba(128,128,128,0.2)"
+        fig.xaxis.zerolinecolor = theme.accent
+        fig.yaxis.gridcolor = "rgba(128,128,128,0.2)"
+        fig.yaxis.zerolinecolor = theme.accent
+        
+        return fig
+    endfunction
+
+    public procedure setChartTitle(pTitle)
+        if pTitle == "" OR pTitle.length < 3 then
+            throw ValueError("Visualisation: Title is too short.")
+        else
+            chartTitle = pTitle
+        endif
+    endprocedure
+
+    public procedure setData(pData)
+        if pData == str(None) OR pData.isEmpty() == True then
+            throw ValueError("Visualisation: Data source cannot be empty.")
+        else
+            data = pData
+        endif
+    endprocedure
+
+    public procedure setCurrency(pCurrency)
+        if pCurrency == "" then
+            currency = "USD"
+        else
+            currency = pCurrency
+        endif
+    endprocedure
+
+    public function getChartTitle()
+        return chartTitle
+    endfunction
+
+    public function getData()
+        return data
+    endfunction
+
+    public function getCurrency()
+        return currency
+    endfunction
+endclass
