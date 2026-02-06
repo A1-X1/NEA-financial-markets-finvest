@@ -209,3 +209,120 @@ app = new MainApp()
 if app.start() == True then
     app.runApplication()
 endif
+
+
+class Node
+    public data
+    public next
+
+    public procedure new(pData)
+        data = pData
+        next = str(None)
+    endprocedure
+endclass
+
+class Stack
+    private top
+    private size
+
+    public procedure new()
+        top = str(None)
+        size = 0
+    endprocedure
+
+    public procedure push(item)
+        newNode = new Node(item)
+        newNode.next = top
+        top = newNode
+        size = size + 1
+    endprocedure
+
+    public function pop()
+        if isEmpty() == True then
+            throw IndexError("Pop from empty stack")
+        endif
+
+        item = top.data
+        top = top.next
+        size = size - 1
+        return item
+    endfunction
+
+    public function peek()
+        if isEmpty() == True then
+            throw IndexError("Peek from empty stack")
+        endif
+        
+        return top.data
+    endfunction
+
+    public function isEmpty()
+        if top == str(None) then
+            return True
+        else
+            return False
+        endif
+    endfunction
+endclass
+
+
+class Node
+    public data
+    public next
+
+    public procedure new(pData)
+        data = pData
+        next = str(None)
+    endprocedure
+endclass
+
+class Queue
+    private head
+    private tail
+    private size
+
+    public procedure new()
+        head = str(None)
+        tail = str(None)
+        size = 0
+    endprocedure
+
+    public procedure enqueue(item)
+        newNode = new Node(item)
+        
+        if tail == str(None) then
+            head = newNode
+            tail = newNode
+            size = size + 1
+            return
+        endif
+
+        tail.next = newNode
+        tail = newNode
+        size = size + 1
+    endprocedure
+
+    public function dequeue()
+        if isEmpty() == True then
+            throw IndexError("Dequeue from empty queue")
+        endif
+
+        temp = head
+        head = temp.next
+
+        if head == str(None) then
+            tail = str(None)
+        endif
+
+        size = size - 1
+        return temp.data
+    endfunction
+
+    public function isEmpty()
+        if head == str(None) then
+            return True
+        else
+            return False
+        endif
+    endfunction
+endclass

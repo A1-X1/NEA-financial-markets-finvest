@@ -89,20 +89,16 @@ class DataHandler:
 
     @staticmethod
     def get_current_prices(tickers: list) -> dict:
-        """
-        Fetches {ticker: {'price': float, 'currency': str}}
-        """
+        # fetches {ticker: {'price': float, 'currency': str}}
         if not tickers:
             return {}
             
         try:
             tickers_str = " ".join(tickers)
-            # Fetch valid data
+            # fetch valid data
             ticker_objs = yf.Tickers(tickers_str)
             
-            # If multiple tickers, download returns DF. If single, Series/DF.
-            # Ideally use download for prices and accessing .tickers properties for currency
-            
+            # if multiple tickers, download returns dataframe
             data = yf.download(tickers_str, period="1d", progress=False)['Close']
             
             results = {}
@@ -130,24 +126,25 @@ class DataHandler:
 
     @staticmethod
     def get_exchange_rate(from_currency: str, to_currency: str) -> float:
-        """Fetching exchange rate from Yahoo Finance."""
+        # fetching exchange rate from Yahoo Finance
         if from_currency == to_currency:
             return 1.0
         
-        # Crypto/major pairs usually work like GBPUSD=X
+        # crypto/major pairs usually work like GBPUSD=X
         pair = f"{from_currency}{to_currency}=X" 
         try:
             data = yf.Ticker(pair).history(period="1d")
             if not data.empty:
                 return data['Close'].iloc[-1]
             
-            # Try inverse
+            # try inverse
             pair_inv = f"{to_currency}{from_currency}=X"
             data_inv = yf.Ticker(pair_inv).history(period="1d")
             if not data_inv.empty:
                 return 1.0 / data_inv['Close'].iloc[-1]
             
-            return 1.0 # Fallback
+            # fallback value
+            return 1.0
         except:
             return 1.0
 
