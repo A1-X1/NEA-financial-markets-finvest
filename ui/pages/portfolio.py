@@ -7,6 +7,7 @@ from ui.pages.components.visualisation import PortfolioVisualisation
 import csv
 import io
 import pickle
+import os
 from modules.database.database import cursor, connection
 
 # global CSS for Portfolio Page 
@@ -226,19 +227,24 @@ class PortfolioPage:
         raw_prices = DataHandler.get_current_prices(tickers)
         
         # create CSV
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['Ticker', 'Quantity', 'Price', 'Currency', 'Value (Local)'])
-        
-        for ticker, quantity in items:
-            data = raw_prices.get(ticker, {'price': 0.0, 'currency': 'USD'})
-            price = data['price']
-            currency = data['currency']
-            val = price * quantity
-            writer.writerow([ticker, quantity, f"{price:.2f}", currency, f"{val:.2f}"])
+        try:
+            downloads_path = os.path.join(os.path.expanduser('~'), 'Downloads')
+            file_path = os.path.join(downloads_path, 'portfolio_export.csv')
             
-        ui.download(output.getvalue().encode('utf-8'), 'portfolio_export.csv')
-        ui.notify('CSV Exported to Downloads', color='positive')
+            with open(file_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['Ticker', 'Quantity', 'Price', 'Currency', 'Value (Local)'])
+                
+                for ticker, quantity in items:
+                    data = raw_prices.get(ticker, {'price': 0.0, 'currency': 'USD'})
+                    price = data['price']
+                    currency = data['currency']
+                    val = price * quantity
+                    writer.writerow([ticker, quantity, f"{price:.2f}", currency, f"{val:.2f}"])
+                
+            ui.notify(f'CSV Exported to {file_path}', color='positive')
+        except Exception as e:
+            ui.notify(f'Export failed: {e}', color='negative')
 
     def refresh_view(self):
         # update title
