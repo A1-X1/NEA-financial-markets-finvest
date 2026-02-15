@@ -29,8 +29,8 @@ class HashTable:
         # check if key exists in the chain
         while node:
             if node.key == key:
-                # update existing value
-                node.value = value 
+                # add to existing value
+                node.value += value 
                 return
             node = node.next
 
