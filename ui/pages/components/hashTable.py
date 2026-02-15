@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, List, Optional, Tuple
 
+
+# custom hash node implementation
 @dataclass
 class HashNode:
     key: Any
@@ -8,24 +10,19 @@ class HashNode:
     next: Optional['HashNode'] = None
 
 class HashTable:
-    """
-    A custom Hash Table implementation using Chaining for collision resolution.
-    Stores portfolio assets where Key = Ticker Symbol, Value = Quantity.
-    """
+    # custom hash table implementation avoiding collisions with chaining
     def __init__(self, capacity: int = 50):
         self.capacity = capacity
         self.size = 0
         self.buckets: List[Optional[HashNode]] = [None] * self.capacity
 
+    # custom hash function
     def _hash(self, key: Any) -> int:
-        """Computes the index for a given key."""
         return hash(key) % self.capacity
 
+    # custom put method to handle collisions
     def put(self, key: Any, value: Any):
-        """
-        Inserts a key-value pair. 
-        If key exists, updates the value (Duplicate Key Handling).
-        """
+        # hash key to get index
         index = self._hash(key)
         node = self.buckets[index]
 
@@ -42,8 +39,8 @@ class HashTable:
         self.buckets[index] = new_node
         self.size += 1
 
+    # custom get method
     def get(self, key: Any) -> Optional[Any]:
-        """Retrieves the value for a given key, or None if not found."""
         index = self._hash(key)
         node = self.buckets[index]
 
@@ -54,8 +51,8 @@ class HashTable:
         
         return None
 
+    # custom remove method that returns true if removed, false if not found
     def remove(self, key: Any) -> bool:
-        """Removes a key-value pair. Returns True if removed, False if not found."""
         index = self._hash(key)
         node = self.buckets[index]
         prev = None
@@ -73,8 +70,8 @@ class HashTable:
         
         return False
 
+    # custom get all method that gets all key-value pairs
     def get_all(self) -> List[Tuple[Any, Any]]:
-        """Returns a list of all (key, value) pairs in the table."""
         items = []
         for i in range(self.capacity):
             node = self.buckets[i]
@@ -83,7 +80,7 @@ class HashTable:
                 node = node.next
         return items
 
+    # custom clear method that clears the hash table
     def clear(self):
-        """Clears the hash table."""
         self.buckets = [None] * self.capacity
         self.size = 0
