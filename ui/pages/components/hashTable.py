@@ -26,14 +26,15 @@ class HashTable:
         index = self._hash(key)
         node = self.buckets[index]
 
-        # Check if key exists in the chain (Update)
+        # check if key exists in the chain
         while node:
             if node.key == key:
-                node.value = value # Update existing value
+                # update existing value
+                node.value = value 
                 return
             node = node.next
 
-        # Key not found, insert new node at head of chain (Insert)
+        # key not found then insert new node at head of chain
         new_node = HashNode(key, value)
         new_node.next = self.buckets[index]
         self.buckets[index] = new_node
