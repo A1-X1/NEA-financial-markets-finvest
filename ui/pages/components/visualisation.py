@@ -153,34 +153,46 @@ class GBMVisualisation(Visualisation):
         x_axis = self.data.index
         
         # filter for simulation columns (avoiding 'Date' or 'Mean' if they exist)
-        sim_cols = [c for c in self.data.columns if c not in ['Date', 'Mean']]
+        sim_cols = [c for c in self.data.columns if c not in ['Date', 'Mean', 'Max', 'Min']]
         
-        # identify the highest and lowest paths based on the final price
-        terminal_values = self.data[sim_cols].iloc[-1]
-        highest_path = terminal_values.idxmax()
-        lowest_path = terminal_values.idxmin()
+        # calculate the daily highest and lowest values across all simulation paths
+        daily_max = self.data[sim_cols].max(axis=1)
+        daily_min = self.data[sim_cols].min(axis=1)
         
-        # add simulation paths
+        # add simulation paths (background lines)
         for col in sim_cols:
-            is_extreme = (col == highest_path or col == lowest_path)
-            
-            # label for legend/tooltip
-            label = f'Path {col}'
-            if col == highest_path: label = "Highest Path"
-            if col == lowest_path: label = "Lowest Path"
-
             fig.add_trace(go.Scatter(
                 x=x_axis,
                 y=self.data[col],
                 mode='lines',
                 line=dict(width=1),
-                opacity=0.3 if not is_extreme else 0.6,
-                name=label,
+                opacity=0.15, # more subtle as they don't have tooltips
+                name=f'Path {col}',
                 showlegend=False,
-                # only show hover template for extreme paths
-                hovertemplate=f'<b>{label}</b><br>Day %{{x}}<br>Price: %{{y:.2f}}<extra></extra>' if is_extreme else None,
-                hoverinfo='all' if is_extreme else 'skip'
+                hoverinfo='skip' # disable individual tooltips
             ))
+
+        # add daily high trace (for tooltip and clear bound)
+        fig.add_trace(go.Scatter(
+            x=x_axis,
+            y=daily_max,
+            mode='lines',
+            line=dict(width=1, dash='dot', color=theme.accent),
+            opacity=0.5,
+            name='Daily High',
+            hovertemplate='<b>Daily High</b><br>Day %{x}<br>Price: %{y:.2f}<extra></extra>'
+        ))
+
+        # add daily low trace (for tooltip and clear bound)
+        fig.add_trace(go.Scatter(
+            x=x_axis,
+            y=daily_min,
+            mode='lines',
+            line=dict(width=1, dash='dot', color=theme.accent),
+            opacity=0.5,
+            name='Daily Low',
+            hovertemplate='<b>Daily Low</b><br>Day %{x}<br>Price: %{y:.2f}<extra></extra>'
+        ))
             
         # add mean path if it exists
         if 'Mean' in self.data.columns:
