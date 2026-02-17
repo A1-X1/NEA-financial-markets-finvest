@@ -59,6 +59,8 @@ def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
         raise ValueError("Drift must be positive")
     if (num_sims <= 0):
         raise ValueError("Number of simulations must be positive")
+    if (num_sims > 10000):
+        raise ValueError("Number of simulations must be less than or equal to 10000")
     if (num_steps <= 0):
         raise ValueError("Number of steps must be positive")
     if (dt <= 0):

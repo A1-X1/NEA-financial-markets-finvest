@@ -9,8 +9,8 @@ from modules.calculations import calculateSharpeRatio, calculateVolatility, calc
 # testing gbm with params
 s0 = 100
 drift = 0.1
-volatility = -0.5
-numSims = 10
+volatility = 0.2
+numSims = 1000
 numSteps = 100
 dt = 1/252
 
