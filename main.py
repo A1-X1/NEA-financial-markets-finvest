@@ -9,6 +9,16 @@ from ui.pages.portfolio import PortfolioPage
 from ui.pages.settings import SettingsPage
 
 
+from nicegui.javascript_request import JavaScriptRequest
+
+# monkeypatch to increase the default javascript timeout from 1.0s to 60.0s
+# this prevents the app from resetting when rendering 10,000+ simulation paths
+original_init = JavaScriptRequest.__init__
+def patched_init(self, request_id: str, *, timeout: float = 60.0):
+    original_init(self, request_id, timeout=timeout)
+JavaScriptRequest.__init__ = patched_init
+
+
 # instantiate the app class
 class MainApp:
     def __init__(self):
