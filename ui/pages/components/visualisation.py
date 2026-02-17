@@ -139,3 +139,65 @@ class PortfolioVisualisation(Visualisation):
         )
         
         return fig
+
+@dataclass
+class GBMVisualisation(Visualisation):
+    # specialised method to generate gbm path chart
+    # data_input is expected to be a dataframe where each row is a time step
+    # and columns are simulation paths (plus potentially a 'Mean' column)
+    def generate_chart(self) -> go.Figure:
+        theme = globalSettings.theme
+        fig = go.Figure()
+        
+        # ensure 'Date' or index is used for X axis
+        x_axis = self.data.index
+        
+        # filter for simulation columns (avoiding 'Date' or 'Mean' if they exist)
+        sim_cols = [c for c in self.data.columns if c not in ['Date', 'Mean']]
+        
+        # identify the highest and lowest paths based on the final price
+        terminal_values = self.data[sim_cols].iloc[-1]
+        highest_path = terminal_values.idxmax()
+        lowest_path = terminal_values.idxmin()
+        
+        # add simulation paths
+        for col in sim_cols:
+            is_extreme = (col == highest_path or col == lowest_path)
+            
+            # label for legend/tooltip
+            label = f'Path {col}'
+            if col == highest_path: label = "Highest Path"
+            if col == lowest_path: label = "Lowest Path"
+
+            fig.add_trace(go.Scatter(
+                x=x_axis,
+                y=self.data[col],
+                mode='lines',
+                line=dict(width=1),
+                opacity=0.3 if not is_extreme else 0.6,
+                name=label,
+                showlegend=False,
+                # only show hover template for extreme paths
+                hovertemplate=f'<b>{label}</b><br>Day %{{x}}<br>Price: %{{y:.2f}}<extra></extra>' if is_extreme else None,
+                hoverinfo='all' if is_extreme else 'skip'
+            ))
+            
+        # add mean path if it exists
+        if 'Mean' in self.data.columns:
+            fig.add_trace(go.Scatter(
+                x=x_axis,
+                y=self.data['Mean'],
+                mode='lines',
+                line=dict(color=theme.accent, width=4),
+                name='Mean Path',
+                hovertemplate='<b>Mean Path</b><br>Day %{x}<br>Price: %{y:.2f}<extra></extra>'
+            ))
+            
+        fig.update_layout(
+            title=self.chart_title,
+            xaxis_title='Trading Days (Forecast)',
+            yaxis_title=f'Price ({self.currency})',
+            hovermode='x unified'
+        )
+        
+        return self._apply_theme_layout(fig)

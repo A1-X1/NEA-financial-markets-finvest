@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from numba import njit, prange
 
 # calculates the Sharpe Ratio
 def calculateSharpeRatio(data: pd.DataFrame, risk_free_rate: float = 0.02) -> float:
@@ -36,3 +37,37 @@ def calculateTotalReturn(data_frame):
     final_price = data_frame['Close'].iloc[-1]
     percentage_growth = ((final_price - initial_price) / initial_price) * 100
     return percentage_growth
+
+# generates monte carlo paths using gbm
+# njit decorator used to compile to machine code for speed
+# parallel=True allows for multithreaded execution across sims
+@njit(parallel=True)
+def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
+    # s0: initial price
+    # drift: expected annual return
+    # vol: annual volatility
+    # num_sims: paths to generate
+    # num_steps: time steps per path
+    # dt: time increment
+    
+    # paths matrix (simulations x steps)
+    paths = np.zeros((num_sims, num_steps + 1))
+    paths[:, 0] = s0
+    
+    # prange used for parallel execution
+    for i in prange(num_sims):
+        # generate all shocks for this path at once (vectorized)
+        shocks = np.random.standard_normal(num_steps)
+        
+        # calculate log returns (vectorized)
+        # log_ret = (mu - 0.5*sigma^2)*dt + sigma*sqrt(dt)*shock
+        drift_term = (drift - 0.5 * vol**2) * dt
+        diffusion_term = vol * np.sqrt(dt) * shocks
+        log_returns = drift_term + diffusion_term
+        
+        # calculate prices using cumulative sum (vectorized)
+        # S_t = S_0 * exp(cumsum(log_returns))
+        cumulative_returns = np.cumsum(log_returns)
+        paths[i, 1:] = s0 * np.exp(cumulative_returns)
+            
+    return paths
