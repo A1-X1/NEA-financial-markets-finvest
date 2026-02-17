@@ -49,6 +49,21 @@ def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
     # num_sims: paths to generate
     # num_steps: time steps per path
     # dt: time increment
+
+    # input validation
+    if (vol < 0):
+        raise ValueError("Volatility cannot be negative")
+    if (s0 <= 0):
+        raise ValueError("Initial price must be positive")
+    if (drift < 0):
+        raise ValueError("Drift must be positive")
+    if (num_sims <= 0):
+        raise ValueError("Number of simulations must be positive")
+    if (num_steps <= 0):
+        raise ValueError("Number of steps must be positive")
+    if (dt <= 0):
+        raise ValueError("Time increment must be positive")
+
     
     # paths matrix (simulations x steps)
     paths = np.zeros((num_sims, num_steps + 1))
