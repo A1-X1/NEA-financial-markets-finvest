@@ -156,11 +156,16 @@ class GBMVisualisation(Visualisation):
         sim_cols = [c for c in self.data.columns if c not in ['Date', 'Mean', 'Max', 'Min']]
         
         # calculate the daily highest and lowest values across all simulation paths
+        # we do this BEFORE subsetting to ensure bounds are based on all data
         daily_max = self.data[sim_cols].max(axis=1)
         daily_min = self.data[sim_cols].min(axis=1)
+
+        # limit drawn paths to 3000 to avoid ui timeouts (nicegui timeouts at ~1s)
+        # however we keep all data for the high/low/mean calculations
+        drawn_sim_cols = sim_cols[:3000]
         
         # add simulation paths (background lines)
-        for col in sim_cols:
+        for col in drawn_sim_cols:
             fig.add_trace(go.Scatter(
                 x=x_axis,
                 y=self.data[col],
