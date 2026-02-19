@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from numba import njit, prange
+from datetime import time, datetime
 
 # calculates the Sharpe Ratio
 def calculateSharpeRatio(data: pd.DataFrame, risk_free_rate: float = 0.02) -> float:
@@ -41,7 +42,7 @@ def calculateTotalReturn(data_frame):
 # generates monte carlo paths using gbm
 # njit decorator used to compile to machine code for speed
 # parallel=True allows for multithreaded execution across sims
-@njit(parallel=True)
+
 def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
     # s0: initial price
     # drift: expected annual return
@@ -88,3 +89,56 @@ def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
         paths[i, 1:] = s0 * np.exp(cumulative_returns)
             
     return paths
+
+
+import math
+import random
+
+def generate_gbm_paths_pure_python(
+    initial_price,
+    expected_return,
+    volatility,
+    number_of_simulations,
+    steps_per_path,
+    time_step
+):
+    # ---- input validation ----
+    if volatility < 0:
+        raise ValueError("Volatility cannot be negative")
+    if initial_price <= 0:
+        raise ValueError("Initial price must be positive")
+    if expected_return < 0:
+        raise ValueError("Expected return (drift) must be positive")
+    if number_of_simulations <= 0:
+        raise ValueError("Number of simulations must be positive")
+    if number_of_simulations > 10000:
+        raise ValueError("Number of simulations must be <= 10000")
+    if steps_per_path <= 0:
+        raise ValueError("Number of steps must be positive")
+    if time_step <= 0:
+        raise ValueError("Time step must be positive")
+
+    # ---- precomputed constants ----
+    drift_component = (expected_return - 0.5 * volatility * volatility) * time_step
+    diffusion_scale = volatility * math.sqrt(time_step)
+
+    # ---- allocate output ----
+    price_paths = [
+        [0.0] * (steps_per_path + 1)
+        for _ in range(number_of_simulations)
+    ]
+
+    # ---- simulate paths ----
+    for simulation_index in range(number_of_simulations):
+        current_price = initial_price
+        price_paths[simulation_index][0] = current_price
+
+        for step_index in range(steps_per_path):
+            standard_normal_shock = random.gauss(0.0, 1.0)
+            growth_factor = math.exp(
+                drift_component + diffusion_scale * standard_normal_shock
+            )
+            current_price *= growth_factor
+            price_paths[simulation_index][step_index + 1] = current_price
+
+    return price_paths
