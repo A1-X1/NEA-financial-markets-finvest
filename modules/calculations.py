@@ -40,9 +40,6 @@ def calculateTotalReturn(data_frame):
     return percentage_growth
 
 # generates monte carlo paths using gbm
-# njit decorator used to compile to machine code for speed
-# parallel=True allows for multithreaded execution across sims
-
 def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
     # s0: initial price
     # drift: expected annual return
@@ -78,13 +75,11 @@ def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
         shocks = np.random.standard_normal(num_steps)
         
         # calculate log returns (vectorized)
-        # log_ret = (mu - 0.5*sigma^2)*dt + sigma*sqrt(dt)*shock
         drift_term = (drift - 0.5 * vol**2) * dt
         diffusion_term = vol * np.sqrt(dt) * shocks
         log_returns = drift_term + diffusion_term
         
         # calculate prices using cumulative sum (vectorized)
-        # S_t = S_0 * exp(cumsum(log_returns))
         cumulative_returns = np.cumsum(log_returns)
         paths[i, 1:] = s0 * np.exp(cumulative_returns)
             
