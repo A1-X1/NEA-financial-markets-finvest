@@ -41,6 +41,34 @@ def save_widget_list(widget_list: list[dict]):
         print(f'homeWidgetManager save error: {e}')
 
 
+def save_undo_redo_stacks(undo_data: list, redo_data: list):
+    # serialises both stacks into a single record in the DB
+    _ensure_table()
+    try:
+        data = pickle.dumps({'undo': undo_data, 'redo': redo_data})
+        cursor.execute(
+            f'INSERT OR REPLACE INTO {_TABLE} (id, data) VALUES (2, ?)',
+            (data,)
+        )
+        connection.commit()
+    except Exception as e:
+        print(f'homeWidgetManager stack save error: {e}')
+
+
+def load_undo_redo_stacks() -> tuple[list, list]:
+    # loads the stacks from the database if they exist
+    _ensure_table()
+    try:
+        cursor.execute(f'SELECT data FROM {_TABLE} WHERE id = 2')
+        row = cursor.fetchone()
+        if row:
+            data = pickle.loads(row[0])
+            return data.get('undo', []), data.get('redo', [])
+    except Exception as e:
+        print(f'homeWidgetManager stack load error: {e}')
+    return [], []
+
+
 def add_widget(widget_type: str, config: dict) -> str:
     # append a new widget record to the stored list and return its id
     widgets = load_widget_list()
