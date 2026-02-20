@@ -254,10 +254,11 @@ class PortfolioPage:
 
         dialog.open()
 
-    def __handle_csv_upload(self, event, dialog):
+    async def __handle_csv_upload(self, event, dialog):
         # reads the uploaded csv and loads it into the portfolio
         try:
-            pairs = self.parse_import_csv(event.content.read())
+            content_bytes = await event.file.read()
+            pairs = self.parse_import_csv(content_bytes)
             if not pairs:
                 ui.notify('CSV is empty or has no valid rows', color='warning')
                 return
