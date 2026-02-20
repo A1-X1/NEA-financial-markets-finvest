@@ -4,6 +4,7 @@ import asyncio
 from modules.globalSettings import globalSettings
 from modules.simulationEngine import SimulationEngine
 from ui.pages.components.visualisation import GBMVisualisation
+from ui.pages.components import homeWidgetManager
 
 # global CSS for Simulation Page (consistent with Portfolio styles)
 ui.add_css('''
@@ -134,21 +135,18 @@ class SimulationPage:
                     with self.__chart_container:
                         ui.label('No simulation data. Enter parameters and click Simulate.').classes('text-gray-400 italic')
                     
-                    # add to home button with popup menu for page selection
-                    add_home_btn = ui.button('Add to Home', icon='home') \
-                        .style(btn_style).props('flat unelevated').classes('w-48 font-bold')
-                    with ui.menu().style(
-                        f'background-color: {theme.surface}; border: 1px solid {theme.accent}33; '
-                        f'border-radius: 12px; min-width: 180px;'
-                    ) as add_home_menu:
-                        ui.label('Add widget to').classes('text-xs px-4 pt-3 pb-1 font-semibold') \
-                            .style(f'color: {theme.text_secondary}; text-transform: uppercase; letter-spacing: 0.05em;')
-                        for page_label, page_route in [('Home', '/'), ('Charts', '/charts'), ('Portfolio', '/portfolio')]:
-                            with ui.menu_item(on_click=lambda r=page_route: ui.navigate.to(r)) \
-                                    .classes('gap-3 px-4 py-2 rounded-lg mx-1 my-0.5') \
-                                    .style(f'color: {theme.text_primary};'):
-                                ui.label(page_label)
-                    add_home_btn.on('click', lambda: add_home_menu.open())
+                    # add to home button adds widget directly to homepage state
+                    ui.button('Add to Home', icon='home', on_click=lambda: (
+                        homeWidgetManager.add_widget('Simulation', {
+                            'ticker': self.__ticker_input.value,
+                            'title': self.__title_input.value or f"{self.__ticker_input.value} Forecast",
+                            'timeframe': self.__timeframe_select.value,
+                            'rfr': float(self.__rfr_input.value or 0.02),
+                            'sims': int(self.__sims_input.value or 500),
+                            'steps': int(self.__steps_input.value or 252)
+                        }),
+                        ui.notify(f'Added {self.__ticker_input.value} to Dashboard', color='positive')
+                    )).style(btn_style).props('flat unelevated').classes('w-48 font-bold')
 
                 # right side: control panel card
                 with ui.card().classes('w-[350px] p-6 gap-4 shadow-md flex flex-col').style(f'background-color: {theme.surface}; border: 1px solid {theme.text_secondary}22'):

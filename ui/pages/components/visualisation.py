@@ -51,9 +51,8 @@ class Visualisation:
     
     @chart_title.setter
     def chart_title(self, value: str):
-        if not value or len(value) < 3:
-            raise ValueError("Visualisation: Title is too short.")
-        self.__chart_title = value
+        # allow empty titles for widgets that handle their own headers
+        self.__chart_title = value if value is not None else ""
 
     @property
     def data(self) -> pd.DataFrame:

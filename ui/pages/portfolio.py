@@ -4,6 +4,7 @@ from modules.globalSettings import globalSettings
 from ui.pages.components.hashTable import HashTable
 from ui.pages.components.dataHandler import DataHandler
 from ui.pages.components.visualisation import PortfolioVisualisation
+from ui.pages.components import homeWidgetManager
 import csv
 import io
 import pickle
@@ -437,6 +438,13 @@ class PortfolioPage:
 
                     ui.button('Import', icon='upload', on_click=self.__open_import_dialog) \
                         .style(btn_style).props('flat unelevated')
+
+                    ui.button('Add to Home', icon='home', on_click=lambda: (
+                        homeWidgetManager.add_widget('PortfolioValue', {
+                            'name': self.__current_portfolio_Name
+                        }),
+                        ui.notify(f'Portfolio "{self.__current_portfolio_Name}" added to Dashboard', color='positive')
+                    )).style(btn_style).props('flat unelevated')
 
             # layout single row containing 3 equal(ish) sections
             

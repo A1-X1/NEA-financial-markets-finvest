@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 from modules.globalSettings import globalSettings
 from ui.pages.components.dataHandler import DataHandler
 from ui.pages.components.visualisation import RiskTrendVisualisation
+from ui.pages.components import homeWidgetManager
 from modules.calculations import calculateSharpeRatio, calculateVolatility, calculateTotalReturn
 from modules.database.database import cursor, connection
 import pickle
@@ -225,21 +226,15 @@ class ChartsPage:
                     ui.button('Generate Chart', on_click=lambda: self.__generate_chart(use_cached=False)) \
                         .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
                     
-                    # add to home button with popup menu for page selection
-                    add_home_btn = ui.button('Add to Home', icon='home') \
-                        .style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
-                    with ui.menu().style(
-                        f'background-color: {theme.background}; border: 1px solid {theme.accent}33; '
-                        f'border-radius: 12px; min-width: 180px;'
-                    ) as add_home_menu:
-                        ui.label('Add widget to').classes('text-xs px-4 pt-3 pb-1 font-semibold') \
-                            .style(f'color: {theme.text_secondary}; text-transform: uppercase; letter-spacing: 0.05em;')
-                        for page_label, page_route in [('Home', '/'), ('Simulation', '/simulation'), ('Portfolio', '/portfolio')]:
-                            with ui.menu_item(on_click=lambda r=page_route: ui.navigate.to(r)) \
-                                    .classes('gap-3 px-4 py-2 rounded-lg mx-1 my-0.5') \
-                                    .style(f'color: {theme.text_primary};'):
-                                ui.label(page_label)
-                    add_home_btn.on('click', lambda: add_home_menu.open())
+                    # add to home button adds widget directly to homepage state
+                    ui.button('Add to Home', icon='home', on_click=lambda: (
+                        homeWidgetManager.add_widget('MarketChart', {
+                            'ticker': self.__ticker_input.value,
+                            'title': self.__title_input.value or f"{self.__ticker_input.value} Trend",
+                            'chart_mode': self.__chart_mode
+                        }),
+                        ui.notify(f'Added {self.__ticker_input.value} to Dashboard', color='positive')
+                    )).style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')
                     
                     # toggle chart type button  
                     icon_name = 'candlestick_chart' if self.__chart_mode == "Candlestick" else "show_chart"
