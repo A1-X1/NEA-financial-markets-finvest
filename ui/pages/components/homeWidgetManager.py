@@ -1,9 +1,7 @@
 import pickle
 import uuid
 from modules.database.database import cursor, connection
-
 _TABLE = 'HomepageWidgetsTable'
-
 
 def _ensure_table():
     # create the table if it doesn't exist — mirrors other page cache patterns
@@ -14,7 +12,6 @@ def _ensure_table():
         )
     ''')
     connection.commit()
-
 
 def load_widget_list() -> list[dict]:
     _ensure_table()
@@ -27,7 +24,6 @@ def load_widget_list() -> list[dict]:
         print(f'homeWidgetManager load error: {e}')
     return []
 
-
 def save_widget_list(widget_list: list[dict]):
     _ensure_table()
     try:
@@ -39,7 +35,6 @@ def save_widget_list(widget_list: list[dict]):
         connection.commit()
     except Exception as e:
         print(f'homeWidgetManager save error: {e}')
-
 
 def save_undo_redo_stacks(undo_data: list, redo_data: list):
     # serialises both stacks into a single record in the DB
@@ -54,7 +49,6 @@ def save_undo_redo_stacks(undo_data: list, redo_data: list):
     except Exception as e:
         print(f'homeWidgetManager stack save error: {e}')
 
-
 def load_undo_redo_stacks() -> tuple[list, list]:
     # loads the stacks from the database if they exist
     _ensure_table()
@@ -67,7 +61,6 @@ def load_undo_redo_stacks() -> tuple[list, list]:
     except Exception as e:
         print(f'homeWidgetManager stack load error: {e}')
     return [], []
-
 
 def add_widget(widget_type: str, config: dict) -> str:
     # append a new widget record to the stored list and return its id

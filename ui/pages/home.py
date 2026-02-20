@@ -190,7 +190,7 @@ class HomePage:
                 self.__grid_container = ui.element('div').classes('w-full grid grid-cols-1 lg:grid-cols-2 gap-6')
                 self.__render_grid()
 
-        # auto-save every 30 seconds as requested
+        # auto-save every 30 seconds
         ui.timer(30.0, lambda: (
             homeWidgetManager.save_widget_list(self.__widgets.to_list()),
             homeWidgetManager.save_undo_redo_stacks(self.__undo_stack.to_list(), self.__redo_stack.to_list())
