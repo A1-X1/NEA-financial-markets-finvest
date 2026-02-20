@@ -58,7 +58,8 @@ class HomePage:
             w = MarketChartWidget(
                 title=node.config.get('title', 'Market Chart'), 
                 ticker=node.config.get('ticker', 'AAPL'),
-                chart_mode=node.config.get('chart_mode', 'Line')
+                chart_mode=node.config.get('chart_mode', 'Line'),
+                timeframe=node.config.get('timeframe', '1mo')
             )
         elif node.widget_type == 'Simulation':
             w = SimulationChartWidget(

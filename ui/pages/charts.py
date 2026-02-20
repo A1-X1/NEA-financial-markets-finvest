@@ -231,7 +231,8 @@ class ChartsPage:
                         homeWidgetManager.add_widget('MarketChart', {
                             'ticker': self.__ticker_input.value,
                             'title': self.__title_input.value or f"{self.__ticker_input.value} Trend",
-                            'chart_mode': self.__chart_mode
+                            'chart_mode': self.__chart_mode,
+                            'timeframe': self.__timeframe_dropdown.value
                         }),
                         ui.notify(f'Added {self.__ticker_input.value} to Dashboard', color='positive')
                     )).style(btn_style).classes('shadow-sm font-bold').props('flat unelevated')

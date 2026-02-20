@@ -53,14 +53,15 @@ class HomeWidget(ui.element):
     
 # creates a child class of HomeWidget for Market Charts
 class MarketChartWidget(HomeWidget):
-    def __init__(self, title: str, ticker: str, chart_mode: str = 'Line'):
+    def __init__(self, title: str, ticker: str, chart_mode: str = 'Line', timeframe: str = '1mo'):
         super().__init__(title)
         
-        # stores the ticker symbol and data handler
+        # stores the ticker symbol, chart view preference and data handler
         self.__ticker = ticker
         self.__chart_mode = chart_mode
         self.__handler = DataHandler()
         self.__handler.ticker_symbol = self.__ticker
+        self.__handler.period = timeframe
 
         # creates the chart container and refreshes the data
         with self.content:
