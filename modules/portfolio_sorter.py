@@ -50,7 +50,6 @@ def calculate_sharpe_ratio(portfolio_items, risk_free_rate=0.02):
 
 def merge_sort_portfolios(portfolios, descending=True):
     # custom mergesort function that takes in different portfolios and sorts them
-    # sorting is done off of the sharpe ratio of the portfolio
     
     # helper function for recursion
     def _merge_sort(arr):
@@ -68,8 +67,7 @@ def merge_sort_portfolios(portfolios, descending=True):
         i = j = 0
 
         while i < len(left) and j < len(right):
-            # compare based on pre-calculated sharpe ratio
-            # descending order means larger sharpe ratio first
+            # compare based on pre calculated sharpe ratio
             condition = left[i]['sharpe_ratio'] > right[j]['sharpe_ratio'] if descending else left[i]['sharpe_ratio'] < right[j]['sharpe_ratio']
             
             if condition:
@@ -83,7 +81,7 @@ def merge_sort_portfolios(portfolios, descending=True):
         result.extend(right[j:])
         return result
 
-    # pre-calculate sharpe ratios to avoid redundant calculations during sort
+    # pre calculate sharpe ratios to avoid redundant calculations during sort
     processed_portfolios = []
     for p in portfolios:
         # p is expected to be a dict with 'name' and 'items'

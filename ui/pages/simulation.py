@@ -72,17 +72,16 @@ class SimulationPage:
             
             ui.notify(f"Fetching market data for {self.__engine.ticker}...", color='info')
             
-            # I/O bound work: fetch parameters (run in thread to keep loop free)
-            # We don't use cpu_bound here because network I/O doesn't block CPU
+            # fetch parameters (run in thread to keep loop free)
             await run.io_bound(self.__engine.fetch_parameters_from_market, 
                                self.__engine.ticker, 
                                period=self.__timeframe_select.value)
             
-            # CPU bound work: generate paths and process data
-            # run.cpu_bound offloads to a separate process to avoid heartbeat timeouts
+            # generate paths and process data
+            # run.cpu_bound offloads to a separate process to avoid timeouts
             df = await run.cpu_bound(compute_simulation, self.__engine)
             
-            # update chart container (UI work must be in main thread, which we are now back in)
+            # update chart container
             self.__chart_container.clear()
             with self.__chart_container:
                 title = self.__title_input.value or f"{self.__engine.ticker} - forecast"

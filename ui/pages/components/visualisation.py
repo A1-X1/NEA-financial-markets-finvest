@@ -143,8 +143,7 @@ class PortfolioVisualisation(Visualisation):
 @dataclass
 class GBMVisualisation(Visualisation):
     # specialised method to generate gbm path chart
-    # data_input is expected to be a dataframe where each row is a time step
-    # and columns are simulation paths (plus potentially a 'Mean' column)
+    # data_input is a dataframe where each row is a time step
     def generate_chart(self) -> go.Figure:
         theme = globalSettings.theme
         fig = go.Figure()
@@ -156,12 +155,10 @@ class GBMVisualisation(Visualisation):
         sim_cols = [c for c in self.data.columns if c not in ['Date', 'Mean', 'Max', 'Min']]
         
         # calculate the daily highest and lowest values across all simulation paths
-        # we do this BEFORE subsetting to ensure bounds are based on all data
         daily_max = self.data[sim_cols].max(axis=1)
         daily_min = self.data[sim_cols].min(axis=1)
 
-        # limit drawn paths to 3000 to avoid ui timeouts (nicegui timeouts at ~1s)
-        # however we keep all data for the high/low/mean calculations
+        # limit drawn paths to 3000 to avoid ui timeouts but keep the data for calculations
         drawn_sim_cols = sim_cols[:3000]
         
         # add simulation paths (background lines)
@@ -171,10 +168,10 @@ class GBMVisualisation(Visualisation):
                 y=self.data[col],
                 mode='lines',
                 line=dict(width=1),
-                opacity=0.15, # more subtle as they don't have tooltips
+                opacity=0.15, 
                 name=f'Path {col}',
                 showlegend=False,
-                hoverinfo='skip' # disable individual tooltips
+                hoverinfo='skip'
             ))
 
         # add daily high trace (for tooltip and clear bound)

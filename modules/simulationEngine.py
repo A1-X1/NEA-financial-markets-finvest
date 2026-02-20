@@ -13,6 +13,52 @@ class SimulationEngine:
         self.__initial_price = 100.0
         self.__ticker = ""
 
+    def fetch_parameters_from_market(self, ticker, period="1y"):
+        # fetches historical data to estimate drift and volatility
+        handler = DataHandler()
+        handler.ticker_symbol = ticker
+        handler.period = period
+        data = handler.fetch_market_data()
+        
+        if data.empty:
+            raise ValueError(f"no data found for ticker {ticker}")
+            
+        # calculate log returns
+        close_prices = data['Close'].values
+        log_returns = np.diff(np.log(close_prices))
+        
+        # estimate annualised drift and volatility
+        # simplified drift: mean of log returns * 252 + 0.5 * sigma^2
+        sigma = np.std(log_returns) * np.sqrt(252)
+        mu = np.mean(log_returns) * 252 + 0.5 * sigma**2
+        
+        self.__ticker = ticker.upper()
+        self.__initial_price = close_prices[-1]
+        self.__volatility = sigma
+        self.__drift = mu
+        
+        return {
+            'initial_price': self.__initial_price,
+            'volatility': self.__volatility,
+            'drift': self.__drift
+        }
+
+    def run_simulation(self):
+        # runs the gbm simulation
+        # dt is time step size (annualised 252 trading days)
+        dt = 1 / 252 
+        
+        paths = generate_gbm_paths(
+            self.__initial_price,
+            self.__drift,
+            self.__volatility,
+            self.__num_simulations,
+            self.__num_steps,
+            dt
+        )
+        
+        return paths
+
     # getters and setters with strict validation
     @property
     def volatility(self):
@@ -76,48 +122,4 @@ class SimulationEngine:
             raise ValueError("ticker must be a non-empty string")
         self.__ticker = value.upper()
 
-    def fetch_parameters_from_market(self, ticker, period="1y"):
-        # fetches historical data to estimate drift and volatility
-        handler = DataHandler()
-        handler.ticker_symbol = ticker
-        handler.period = period
-        data = handler.fetch_market_data()
-        
-        if data.empty:
-            raise ValueError(f"no data found for ticker {ticker}")
-            
-        # calculate log returns
-        close_prices = data['Close'].values
-        log_returns = np.diff(np.log(close_prices))
-        
-        # estimate annualised drift and volatility
-        # simplified drift: mean of log returns * 252 + 0.5 * sigma^2
-        sigma = np.std(log_returns) * np.sqrt(252)
-        mu = np.mean(log_returns) * 252 + 0.5 * sigma**2
-        
-        self.__ticker = ticker.upper()
-        self.__initial_price = close_prices[-1]
-        self.__volatility = sigma
-        self.__drift = mu
-        
-        return {
-            'initial_price': self.__initial_price,
-            'volatility': self.__volatility,
-            'drift': self.__drift
-        }
-
-    def run_simulation(self):
-        # runs the gbm simulation
-        # dt is time step size (annualised)
-        dt = 1 / 252 # assuming 252 trading days per year
-        
-        paths = generate_gbm_paths(
-            self.__initial_price,
-            self.__drift,
-            self.__volatility,
-            self.__num_simulations,
-            self.__num_steps,
-            dt
-        )
-        
-        return paths
+    
