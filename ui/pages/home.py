@@ -72,7 +72,7 @@ class HomePage:
                     # market chart widget  
                     MarketChartWidget(title="Apple Stock Trend", ticker="AAPL")
 
-                    # new home widget for adding widgets (no callback at the moment)
-                    NewHomeWidget(on_click=lambda: None)
+                    # new home widget for adding widgets
+                    NewHomeWidget()
 
                     

@@ -214,6 +214,65 @@ class PortfolioPage:
             self.refresh_view()
             ui.notify(f"Removed {ticker}", color='positive')
 
+    @staticmethod
+    def parse_import_csv(content: bytes) -> list[tuple[str, float]]:
+        # parses csv bytes and returns a list of (ticker, quantity) tuples
+        import io as _io
+        text = content.decode('utf-8', errors='replace')
+        reader = csv.DictReader(_io.StringIO(text))
+        
+        if 'Ticker' not in (reader.fieldnames or []) or 'Quantity' not in (reader.fieldnames or []):
+            raise ValueError("CSV must contain 'Ticker' and 'Quantity' columns")
+        
+        results = []
+        for row in reader:
+            ticker = row['Ticker'].strip().upper()
+            qty_raw = row['Quantity'].strip()
+            if ticker and qty_raw:
+                results.append((ticker, float(qty_raw)))
+        return results
+
+    def __open_import_dialog(self):
+        theme = self.__settings.theme
+        dialog_style = f'background-color: {theme.surface} !important; color: {theme.text_primary} !important; border: 1px solid {theme.accent} !important;'
+
+        with ui.dialog() as dialog, ui.card().style(dialog_style):
+            ui.label('Import Portfolio CSV').classes('text-lg font-bold mb-2')
+            ui.label('Upload a CSV matching the export format (Ticker, Quantity columns required).') \
+                .classes('text-sm mb-4').style(f'color: {theme.text_secondary}')
+
+            # file uploader — accepts csv only, auto-uploads on selection
+            ui.upload(
+                on_upload=lambda e: self.__handle_csv_upload(e, dialog),
+                auto_upload=True
+            ).props('accept=".csv" flat label="Choose CSV file"') \
+             .classes('w-full').style(f'color: {theme.text_primary}')
+
+            ui.button('Cancel', on_click=dialog.close) \
+                .props('flat').style(f'color: {theme.text_primary} !important').classes('self-end mt-2')
+
+        dialog.open()
+
+    def __handle_csv_upload(self, event, dialog):
+        # reads the uploaded csv and loads it into the portfolio
+        try:
+            pairs = self.parse_import_csv(event.content.read())
+            if not pairs:
+                ui.notify('CSV is empty or has no valid rows', color='warning')
+                return
+
+            self.__portfolio_data.clear()
+            for ticker, qty in pairs:
+                self.__portfolio_data.put(ticker, qty)
+
+            self.refresh_view()
+            ui.notify(f'Imported {len(pairs)} asset(s) successfully', color='positive')
+            dialog.close()
+        except ValueError as e:
+            ui.notify(str(e), color='negative')
+        except Exception as e:
+            ui.notify(f'Import failed: {e}', color='negative')
+
     def export_csv(self):
         # get composition
         items = self.__portfolio_data.get_all()
@@ -374,6 +433,9 @@ class PortfolioPage:
                         .style(btn_style).props('flat unelevated')
                         
                     ui.button('Export', icon='download', on_click=self.export_csv) \
+                        .style(btn_style).props('flat unelevated')
+
+                    ui.button('Import', icon='upload', on_click=self.__open_import_dialog) \
                         .style(btn_style).props('flat unelevated')
 
             # layout single row containing 3 equal(ish) sections
