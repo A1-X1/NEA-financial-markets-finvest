@@ -24,6 +24,15 @@ class MainApp:
         @ui.page('/')
         def index():
             self.layout_renderer.render(active_route='home')
+
+            # show disclaimer notice on first launch
+            ui.notify(
+                'Disclaimer: The developer of Finvest is not liable for financial misconduct by users. '
+                'Professional financial experience is recommended.',
+                type='warning',
+                position='bottom',
+                duration=5.0
+            )
             
             with ui.column().classes('w-full p-4'):
                 page = HomePage()
