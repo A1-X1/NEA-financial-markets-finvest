@@ -64,25 +64,27 @@ def generate_gbm_paths(s0, drift, vol, num_sims, num_steps, dt):
     if (dt <= 0):
         raise ValueError("Time increment must be positive")
 
-    
-    # paths matrix (simulations x steps)
-    paths = np.zeros((num_sims, num_steps + 1))
-    paths[:, 0] = s0
-    
-    # prange used for parallel execution
+    # cast to native types so numba compiles a single specialisation
+    return _gbm_kernel(float(s0), float(drift), float(vol), int(num_sims), int(num_steps), float(dt))
+
+
+# compiled gbm kernel, each path runs on its own cpu core via prange
+@njit(parallel=True, cache=True)
+def _gbm_kernel(s0, drift, vol, num_sims, num_steps, dt):
+    paths = np.empty((num_sims, num_steps + 1))
+
+    # constants are hoisted out of the loop so they are only computed once
+    drift_term = (drift - 0.5 * vol * vol) * dt
+    diffusion_scale = vol * np.sqrt(dt)
+
     for i in prange(num_sims):
-        # generate all shocks for this path at once (vectorized)
-        shocks = np.random.standard_normal(num_steps)
-        
-        # calculate log returns (vectorized)
-        drift_term = (drift - 0.5 * vol**2) * dt
-        diffusion_term = vol * np.sqrt(dt) * shocks
-        log_returns = drift_term + diffusion_term
-        
-        # calculate prices using cumulative sum (vectorized)
-        cumulative_returns = np.cumsum(log_returns)
-        paths[i, 1:] = s0 * np.exp(cumulative_returns)
-            
+        # each step multiplies the previous price by a lognormal growth factor
+        price = s0
+        paths[i, 0] = price
+        for j in range(num_steps):
+            price *= np.exp(drift_term + diffusion_scale * np.random.standard_normal())
+            paths[i, j + 1] = price
+
     return paths
 
 
